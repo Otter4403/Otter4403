@@ -1,8 +1,9 @@
 # Hi there, I'm Harrison 👋
 
-I'm a New Zealand-based university student specializing in Finance and Business Analytics. Passionate about data-driven decision making, investment strategies, and technology.
+I'm a New Zealand-based university student specializing in Finance and Business Analytics, passionate about data-driven decision making, investment strategies, and technology.
 
 ## About Me
+
 - 🎓 Currently pursuing a Bachelor's degree in Finance & Business Analytics
 - 📚 Gaining hands-on experience through university projects in financial modeling, data analysis, and business intelligence
 - 💻 Skilled in Python, SQL, and Excel for academic and analytical applications
@@ -10,12 +11,17 @@ I'm a New Zealand-based university student specializing in Finance and Business 
 - ✈️ Frequent traveler between New Zealand and Southeast Asia
 
 ## Skills & Tools
-- Languages & Analytics: Python, SQL, Excel, Power BI
-- Finance & Investment Concepts: WACC, DCF, portfolio diversification, cryptocurrency basics
-- Other Tech: Azure databases, MongoDB Compass
-- Soft Skills: Analytical thinking, problem-solving, teamwork developed through coursework
+
+**Languages & Analytics:** Python, SQL, Excel, Power BI
+
+**Finance & Investment Concepts:** WACC, DCF, portfolio diversification, cryptocurrency basics
+
+**Other Tech:** Azure databases, MongoDB Compass
+
+**Soft Skills:** Analytical thinking, problem-solving, teamwork developed through coursework
 
 ## Currently Learning
+
 - MongoDB and database management
 - SQL query writing and optimization
 - Python programming for data analysis
@@ -23,9 +29,10 @@ I'm a New Zealand-based university student specializing in Finance and Business 
 - Advanced Excel functions and modeling
 
 ## Find Me On
-- GitHub: (https://github.com/Otter4403)
-- LinkedIn: (https://www.linkedin.com/in/harrison-o-439629221/)
+
+[![GitHub](https://img.shields.io/badge/GitHub-Otter4403-181717?style=flat&logo=github)](https://github.com/Otter4403)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Harrison_O-0A66C2?style=flat&logo=linkedin)](https://www.linkedin.com/in/harrison-o-439629221/)
 
 ---
 
-Thanks for visiting my profile! Feel free to explore my repositories or get in touch.
+Thanks for visiting my profile! Feel free to explore my repositories or get in touch. 🙌
