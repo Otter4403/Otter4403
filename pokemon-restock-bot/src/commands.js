@@ -2,7 +2,8 @@ const { SlashCommandBuilder } = require('discord.js');
 const { randomUUID } = require('crypto');
 const { loadWatches, saveWatches } = require('./storage');
 const { runAllChecks } = require('./monitor');
-const { ownerUserId } = require('./config');
+const { sendAlert } = require('./notify');
+const { ownerUserId, notifyChannelId } = require('./config');
 
 function isOwner(interaction) {
   return interaction.user.id === ownerUserId;
@@ -122,6 +123,27 @@ const commands = [
       await interaction.deferReply({ ephemeral: true });
       const watches = await runAllChecks(interaction.client);
       await interaction.editReply(`Checked ${watches.length} watch(es). Any alerts have been sent separately.`);
+    },
+  },
+  {
+    data: new SlashCommandBuilder()
+      .setName('watch-test')
+      .setDescription('Send a fake restock alert to confirm your DM/channel notification setup actually works'),
+    async execute(interaction) {
+      if (!isOwner(interaction)) {
+        return interaction.reply({ content: "This bot is configured for one owner and that's not you.", ephemeral: true });
+      }
+      await interaction.deferReply({ ephemeral: true });
+      try {
+        await sendAlert(interaction.client, {
+          title: 'TEST ALERT - Charizard ex Premium Collection',
+          description: 'This is a fake alert triggered by /watch-test, not a real restock. If you can see this, your notification setup is working.',
+          url: 'https://example.com/test',
+        });
+        await interaction.editReply(`Sent. Check ${notifyChannelId ? 'the configured channel' : 'your DMs'} - if nothing arrived, the bot is missing permission to message you there.`);
+      } catch (err) {
+        await interaction.editReply(`Failed to send: ${err.message}`);
+      }
     },
   },
 ];

@@ -82,7 +82,10 @@ npm start
 ```
 
 You should see `Logged in as <botname>` in the console. In Discord, use
-`/watch-add`, `/watch-list`, `/watch-remove`, `/watch-check`.
+`/watch-add`, `/watch-list`, `/watch-remove`, `/watch-check`,
+`/watch-test`. Run `/watch-test` right after startup - it sends a fake
+alert immediately so you can confirm your DM/channel notification setup
+actually works, without waiting for a real restock.
 
 ### Starter watches for common NZ retailers
 
