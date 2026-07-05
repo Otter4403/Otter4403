@@ -136,6 +136,33 @@
     "state": {}
   },
   {
+    "id": "farmers-pokemon-new-release",
+    "nickname": "farmers-pokemon-tcg-new",
+    "url": "https://www.farmers.co.nz/toys/SortingAttribute-ArrivalDate-desc?SearchTerm=Pokemon+Trading+Cards",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "farmers-pokemon-stock-example",
+    "nickname": "farmers-terapagos-ex-upc",
+    "url": "https://www.farmers.co.nz/toys/games-cards-puzzles/pokemon-trading-card-terapagoes-ex-ultra-premium-collection-6930892",
+    "platform": "browser",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "farmers-homepage-new-release",
+    "nickname": "farmers-homepage-pokemon",
+    "url": "https://www.farmers.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
+    "state": {}
+  },
+  {
     "id": "toyworld-pokemon-new-release",
     "nickname": "toyworld-pokemon-tcg-new",
     "url": "https://www.toyworld.co.nz/collections/pokemon-trading-cards",

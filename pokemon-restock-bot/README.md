@@ -86,11 +86,11 @@ You should see `Logged in as <botname>` in the console. In Discord, use
 
 ### Starter watches for common NZ retailers
 
-`config/watches.example.json` ships with 15 pre-built watches - for each
-of Kmart NZ, The Warehouse NZ, Mighty Ape NZ, EB Games NZ, and Hobby
-Lords NZ: a new-release watch on the Pokemon TCG category page, one
-example stock watch on a specific product, and a new-release watch on
-the site's **homepage**.
+`config/watches.example.json` ships with 18 pre-built watches - for each
+of Kmart NZ, The Warehouse NZ, Mighty Ape NZ, EB Games NZ, Hobby Lords
+NZ, and Farmers NZ: a new-release watch on the Pokemon TCG category
+page, one example stock watch on a specific product, and a new-release
+watch on the site's **homepage**.
 
 The homepage watches exist because a big drop (like a 30th Anniversary
 set) sometimes shows up as a homepage banner or dedicated campaign page
@@ -119,13 +119,21 @@ A few things to know before you rely on them:
   that exact product may sell out and get delisted entirely (not just
   marked out of stock), at which point the watch will start erroring.
   Swap in whatever product you actually want to track via `/watch-add`.
-- All five are set to `platform: "browser"` since none of them are
+- All six are set to `platform: "browser"` since none of them are
   Shopify: Kmart NZ runs on commercetools (a headless/JS-rendered
-  platform - definitely needs `browser`), and the others are custom
-  platforms where `browser` is the safe default even if `generic` might
-  also work. If you confirm one of them can be scraped with plain HTTP
-  (view-source shows real stock text), switch that watch to `generic`
-  for lower overhead.
+  platform - definitely needs `browser`), Farmers NZ runs on SAP
+  Commerce, and the others are custom platforms where `browser` is the
+  safe default even if `generic` might also work. If you confirm one of
+  them can be scraped with plain HTTP (view-source shows real stock
+  text), switch that watch to `generic` for lower overhead.
+- Farmers' dedicated Pokemon brand page
+  (`farmers.co.nz/brand/pokemon-trading-card`) was showing a maintenance
+  message when I searched, so the new-release watch instead points at
+  their toy search sorted newest-first
+  (`SortingAttribute-ArrivalDate-desc?SearchTerm=Pokemon+Trading+Cards`)
+  - which is arguably better for catching new listings anyway, but
+  double-check the brand page yourself and switch back to it once it's
+  working if you prefer a narrower page.
 - Hobby Lords' URLs (`/collections/...`, `/products/single/...`) look
   like they might be a Shopify-based or Shopify-adjacent platform, but I
   couldn't confirm it. Try `https://www.hobbylords.co.nz/products.json` -
