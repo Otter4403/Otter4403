@@ -3,8 +3,8 @@ const { loadWatches, saveWatches } = require('./storage');
 const { sendAlert } = require('./notify');
 const { userAgent, pollIntervalMinutes } = require('./config');
 const { checkShopifyStock, checkShopifyNewReleases } = require('./checkers/shopify');
-const { checkGenericStock, checkGenericNewReleases } = require('./checkers/generic');
-const { checkBrowserStock, checkBrowserNewReleases } = require('./checkers/browser');
+const { checkGenericStock, checkGenericNewReleases, checkGenericStoreStock } = require('./checkers/generic');
+const { checkBrowserStock, checkBrowserNewReleases, checkBrowserStoreStock } = require('./checkers/browser');
 
 const STOCK_CHECKERS = {
   shopify: checkShopifyStock,
@@ -16,6 +16,14 @@ const NEW_RELEASE_CHECKERS = {
   shopify: checkShopifyNewReleases,
   generic: checkGenericNewReleases,
   browser: checkBrowserNewReleases,
+};
+
+// Store-stock mode isn't offered for `shopify` - the Shopify products.json
+// API only exposes aggregate variant availability, not a breakdown per
+// physical store.
+const STORE_STOCK_CHECKERS = {
+  generic: checkGenericStoreStock,
+  browser: checkBrowserStoreStock,
 };
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -79,6 +87,31 @@ async function checkWatch(client, watch) {
         });
       }
       return alertable.length > 0;
+    }
+
+    if (watch.mode === 'store-stock') {
+      const checker = STORE_STOCK_CHECKERS[watch.platform];
+      if (!checker) throw new Error(`Platform "${watch.platform}" doesn't support store-stock mode - use "browser" or "generic"`);
+      const result = await checker(watch, userAgent);
+      const wasAnyInStock = watch.state.anyInStock;
+      const isFirstCheck = watch.state.lastCheckedAt === undefined;
+
+      watch.state.anyInStock = result.anyInStock;
+      watch.state.perStore = result.perStore;
+      watch.state.lastCheckedAt = new Date().toISOString();
+      watch.state.lastError = null;
+
+      // Don't alert on the very first check - that just establishes the baseline.
+      if (!isFirstCheck && result.anyInStock && !wasAnyInStock) {
+        const newlyInStock = result.perStore.filter((s) => s.status === 'in stock').map((s) => s.store);
+        await sendAlert(client, {
+          title: `In stock near you: ${watch.nickname}`,
+          description: `${newlyInStock.join(', ')}\n${result.detail}\n${watch.url}`,
+          url: watch.url,
+        });
+        return true;
+      }
+      return false;
     }
 
     throw new Error(`Unknown watch mode "${watch.mode}"`);

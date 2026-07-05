@@ -30,12 +30,17 @@ const commands = [
       .addStringOption((o) =>
         o
           .setName('mode')
-          .setDescription('Watch a single product for restock, or a page for new listings')
+          .setDescription('What kind of watch this is')
           .setRequired(true)
-          .addChoices({ name: 'Restock alert (single product)', value: 'stock' }, { name: 'New release alert (collection/category page)', value: 'new-release' })
+          .addChoices(
+            { name: 'Restock alert (single product, anywhere)', value: 'stock' },
+            { name: 'New release alert (collection/category page)', value: 'new-release' },
+            { name: 'Store stock alert (specific physical stores near you)', value: 'store-stock' }
+          )
       )
       .addStringOption((o) => o.setName('keywords').setDescription('Comma-separated keywords to match, e.g. "30th anniversary,scarlet & violet" (new-release mode only)'))
-      .addStringOption((o) => o.setName('selector').setDescription('Advanced: CSS selector for product links (generic + new-release mode only)')),
+      .addStringOption((o) => o.setName('selector').setDescription('Advanced: CSS selector for product links (generic + new-release mode only)'))
+      .addStringOption((o) => o.setName('stores').setDescription('Comma-separated store names to track, e.g. "Sylvia Park,Botany,Manukau" (store-stock mode only)')),
     async execute(interaction) {
       if (!isOwner(interaction)) {
         return interaction.reply({ content: "This bot is configured for one owner and that's not you.", ephemeral: true });
@@ -46,11 +51,19 @@ const commands = [
       const mode = interaction.options.getString('mode');
       const keywordsRaw = interaction.options.getString('keywords');
       const selector = interaction.options.getString('selector');
+      const storesRaw = interaction.options.getString('stores');
 
       try {
         new URL(url);
       } catch {
         return interaction.reply({ content: `"${url}" doesn't look like a valid URL.`, ephemeral: true });
+      }
+
+      if (mode === 'store-stock' && platform === 'shopify') {
+        return interaction.reply({ content: 'Store-stock mode needs "browser" or "generic" - Shopify\'s product JSON only exposes aggregate stock, not a per-store breakdown.', ephemeral: true });
+      }
+      if (mode === 'store-stock' && !storesRaw) {
+        return interaction.reply({ content: 'Store-stock mode needs the `stores` option set to the store name(s) you want to track.', ephemeral: true });
       }
 
       const watches = loadWatches();
@@ -66,6 +79,7 @@ const commands = [
         mode,
         keywords: keywordsRaw ? keywordsRaw.split(',').map((k) => k.trim()).filter(Boolean) : [],
         selector: selector || undefined,
+        storeNames: storesRaw ? storesRaw.split(',').map((s) => s.trim()).filter(Boolean) : undefined,
         state: {},
       };
       watches.push(watch);
@@ -108,6 +122,7 @@ const commands = [
         let status;
         if (state.lastError) status = `error: ${state.lastError}`;
         else if (w.mode === 'stock') status = state.inStock === undefined ? 'not yet checked' : state.inStock ? 'in stock' : 'out of stock';
+        else if (w.mode === 'store-stock') status = state.perStore ? state.perStore.map((s) => `${s.store}: ${s.status}`).join(', ') : 'not yet checked';
         else status = `${(state.seenIds || []).length} items seen`;
         return `**${w.nickname}** (${w.platform}/${w.mode}) - ${status}\n${w.url}`;
       });

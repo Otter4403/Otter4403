@@ -2,13 +2,19 @@
 
 A small Discord bot that polls retailer product pages and pings you the
 moment something restocks or a store lists a new set (e.g. a 30th
-Anniversary product line). Two watch modes:
+Anniversary product line). Three watch modes:
 
 - **`stock`** - watch a single product page, get pinged when it flips from
-  out-of-stock to in-stock.
+  out-of-stock to in-stock (anywhere the retailer ships).
 - **`new-release`** - watch a collection/category/search page, get pinged
   when a new product shows up there, optionally filtered to titles/tags
   matching keywords (e.g. `"30th anniversary"`).
+- **`store-stock`** - watch a specific product's per-physical-store stock
+  page and get pinged only when one of *your* named nearby stores shows it
+  available - for when you actually want to walk in and buy it, not just
+  order online. See "Store-stock mode" below - this one needs more setup
+  and is more fragile than the other two, since it depends on scraping a
+  store-locator widget whose markup varies a lot site to site.
 
 It supports three ways of checking a page:
 
@@ -195,6 +201,68 @@ Confidence varies by store - worth knowing before you lean on them:
   somewhere not listed here, `/watch-add` it yourself; the "is it
   Shopify" check in the next section takes under a minute.
 
+### Store-stock mode
+
+This checks a specific product's "which physical stores have this"
+page and only alerts when one of the store names *you* configured shows
+up as available - so you find out "go to Sylvia Park now" instead of
+just "it's in stock online somewhere."
+
+**Current state, being upfront about it:**
+
+- **Farmers** confirmed to have a real "Check in Store" tool on product
+  pages - `config/watches.example.json` includes one example watch for
+  it (`farmers-terapagos-ex-upc-auckland-stores`), targeting Sylvia
+  Park, Botany, Manukau, St Lukes, Newmarket, and Queen Street. I could
+  not inspect the widget's actual markup from this environment (its
+  outbound web access is sandboxed), so this is a best-effort
+  implementation - see below for how to verify/fix it.
+- **Kmart** does not appear to have a public *website* per-store stock
+  checker - every source I could find (their own FAQ, forums, third-party
+  stock-tracker sites) points to this being an **app-only** feature
+  (their iOS/Android app), or something you have to phone a store to ask
+  about. I didn't build a Kmart store-stock watch rather than fabricate
+  a URL that doesn't exist. If you find one (open a Kmart product page
+  yourself, look for a "check stock" / "find in store" link, and check
+  your browser's dev tools Network tab for an XHR request when you use
+  it), send me the request URL and I'll wire it up properly.
+
+**How it actually works:** the `store-stock` checker (in
+`src/checkers/htmlAnalysis.js`, function `analyzeStoreStockHtml`) loads
+the page, splits it into one "line" of text per block-level element (so
+store rows don't run together), then for each name in `storeNames`
+looks at that store's line (and, if you set `lineWindow` above 0, a
+bounded number of neighboring lines - bounded so it can never bleed into
+the *next* store's row) for in-stock/out-of-stock phrasing. It alerts
+once, the moment *any* configured store flips from none-available to
+at least one available.
+
+**Verifying/fixing a store-stock watch once it's running:**
+
+1. Run `/watch-check`, then `/watch-list`. For a `store-stock` watch you'll
+   see something like `Sylvia Park: in stock, Botany: not found on page,
+   Manukau: out of stock`.
+2. `not found on page` for every store usually means the stock panel
+   isn't in the initial page load - it's behind a button click. The
+   `browser` checker already tries clicking anything matching "check
+   stock"/"check in store"/"find in store" once before giving up; if
+   your store's button says something else, set
+   `watch.checkStockButtonText` to a regex matching the actual button
+   text (view it with dev tools).
+3. If a store name shows a status but it's *wrong* compared to what the
+   real page says, the line-window heuristic is misreading the markup -
+   try `lineWindow: 1` (checks one line before/after the store name too,
+   for sites that put the name and status in separate sibling elements)
+   and compare again.
+4. Matching is a case-insensitive substring check, so `"Sylvia Park"`
+   will match a page that renders `"Farmers Sylvia Park"` - but it has to
+   actually be a substring, so double-check spelling against what the
+   site displays.
+
+This mode only supports `platform: "browser"` or `"generic"` -
+`"shopify"` is excluded because Shopify's product JSON only exposes
+aggregate stock across all locations, not a per-store breakdown.
+
 ### Finding real watch targets
 
 - **Is a store on Shopify?** Visit `https://<store>/products.json` in a
@@ -224,10 +292,13 @@ Confidence varies by store - worth knowing before you lean on them:
   "nickname": "short-name",           // shown in alerts, must be unique
   "url": "https://...",               // product page (stock mode) or collection/category page (new-release mode)
   "platform": "shopify" | "browser" | "generic",
-  "mode": "stock" | "new-release",
+  "mode": "stock" | "new-release" | "store-stock",
   "keywords": ["30th anniversary"],   // new-release mode only; empty array = alert on every new listing
   "selector": "a.product-card",       // browser/generic + new-release mode only; CSS selector for product links
-  "outOfStockPhrases": ["sold out"],  // browser/generic + stock mode only; overrides the built-in phrase list
+  "outOfStockPhrases": ["sold out"],  // stock or store-stock mode; overrides the built-in phrase list
+  "storeNames": ["Sylvia Park"],      // store-stock mode only (required); store names to track
+  "lineWindow": 0,                    // store-stock mode only; how many neighboring lines to also check (default 0 = same line only)
+  "checkStockButtonText": "check.*stock", // store-stock + browser platform only; regex for the button that reveals the stock panel
   "state": {}                         // managed by the bot, leave as {} for new watches
 }
 ```

@@ -1,5 +1,5 @@
 const axios = require('axios');
-const { analyzeStockHtml, analyzeListingHtml } = require('./htmlAnalysis');
+const { analyzeStockHtml, analyzeListingHtml, analyzeStoreStockHtml } = require('./htmlAnalysis');
 
 // Plain HTTP fetch - fast and cheap, but only sees whatever HTML the server
 // sends before any JavaScript runs. Sites that render stock status client-side
@@ -24,4 +24,9 @@ async function checkGenericNewReleases(watch, userAgent) {
   return analyzeListingHtml(html, watch);
 }
 
-module.exports = { checkGenericStock, checkGenericNewReleases };
+async function checkGenericStoreStock(watch, userAgent) {
+  const html = await fetchHtml(watch.url, userAgent);
+  return analyzeStoreStockHtml(html, watch);
+}
+
+module.exports = { checkGenericStock, checkGenericNewReleases, checkGenericStoreStock };
