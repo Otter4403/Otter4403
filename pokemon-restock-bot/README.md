@@ -141,6 +141,46 @@ A few things to know before you rely on them:
   ones matching "anniversary" - add keywords via `/watch-add` or by
   editing the JSON if that's too noisy for a given store.
 
+### Specialty TCG/hobby stores
+
+Beyond the big-box retailers, `config/watches.example.json` also
+includes 11 watches across 9 NZ trading-card specialty stores: Toyworld,
+The Game Tree NZ, Cardtopia, TCG Collector NZ, Card Merchant, Card
+Masters, TCG Culture, Collect All Day, and BayDragon. These are
+generally a *better* bet than the big-box stores for actually landing a
+booster box/ETB - they're TCG-focused, often get direct allocations, and
+(being small businesses) are far more likely to run Shopify, which is
+the fast/reliable checker path.
+
+Confidence varies by store - worth knowing before you lean on them:
+
+- **Confirmed Shopify**: Toyworld (replatformed to Shopify Plus), The
+  Game Tree NZ, and Cardtopia (they announced their own move to Shopify
+  publicly). Set to `platform: "shopify"`.
+- **Presumed Shopify from URL structure** (`/collections/...`,
+  `/products/...`) **but not independently confirmed**: TCG Collector
+  NZ, Card Merchant, Card Masters, TCG Culture. Also set to `"shopify"` -
+  if a watch on one of these errors immediately, check
+  `https://<store>/products.json` in a browser; if that 404s, it's not
+  actually Shopify and you should switch that watch to `"browser"`.
+- **Collect All Day** uses a URL structure that doesn't look like
+  Shopify (no `/collections/` prefix) - set to `"browser"` as a safe
+  default rather than guessed as Shopify.
+- **BayDragon** runs on a different, Java-style platform whose product
+  links embed a `jsessionid` that changes per visit. That breaks
+  new-release detection (every link would look "new" on every poll,
+  since the "id" this bot tracks is the URL itself) - so BayDragon only
+  gets a `stock` watch here, no new-release/listing watch. If you add
+  more BayDragon watches yourself, stick to `mode: "stock"` for the same
+  reason.
+- I sourced all of these via web search rather than a live fetch, same
+  caveat as the big-box list above - verify with `/watch-check` before
+  trusting them, and treat the specific product URLs as swappable
+  examples rather than permanent.
+- This isn't an exhaustive list of NZ Pokemon TCG sellers - if you shop
+  somewhere not listed here, `/watch-add` it yourself; the "is it
+  Shopify" check in the next section takes under a minute.
+
 ### Finding real watch targets
 
 - **Is a store on Shopify?** Visit `https://<store>/products.json` in a

@@ -134,5 +134,104 @@
     "mode": "new-release",
     "keywords": ["pokemon"],
     "state": {}
+  },
+  {
+    "id": "toyworld-pokemon-new-release",
+    "nickname": "toyworld-pokemon-tcg-new",
+    "url": "https://www.toyworld.co.nz/collections/pokemon-trading-cards",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "toyworld-pokemon-stock-example",
+    "nickname": "toyworld-tcg-classic",
+    "url": "https://www.toyworld.co.nz/products/pokemon-tcg-trading-card-game-classic",
+    "platform": "shopify",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "gametree-pokemon-new-release",
+    "nickname": "gametree-pokemon-boxes-new",
+    "url": "https://thegametree.co.nz/collections/pokemon-tcg-booster-boxes-and-cases",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "cardtopia-pokemon-new-release",
+    "nickname": "cardtopia-pokemon-boosters-new",
+    "url": "https://www.cardtopia.co.nz/collections/booster-packs-and-boxes",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "cardtopia-pokemon-stock-example",
+    "nickname": "cardtopia-mega-charizard-x-upc",
+    "url": "https://www.cardtopia.co.nz/products/pre-order-pokemon-tcg-mega-charizard-x-ex-ultra-premium-collection",
+    "platform": "shopify",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "tcgcollectornz-pokemon-new-release",
+    "nickname": "tcgcollectornz-pokemon-boosters-new",
+    "url": "https://tcgcollectornz.com/collections/pokemon-booster-boxes-booster-packs-tcg-collector-nz",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "cardmerchant-pokemon-new-release",
+    "nickname": "cardmerchant-pokemon-boosters-new",
+    "url": "https://cardmerchant.co.nz/collections/pokemon-booster-packs",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "cardmasters-pokemon-new-release",
+    "nickname": "cardmasters-pokemon-boxes-new",
+    "url": "https://cardmasters.co.nz/collections/pokemon-booster-boxes-etbs",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "tcgculture-pokemon-new-release",
+    "nickname": "tcgculture-pokemon-new",
+    "url": "https://tcgculture.com/collections/pokemon",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "collectallday-pokemon-new-release",
+    "nickname": "collectallday-pokemon-boxes-new",
+    "url": "https://www.collectallday.com/pokemon-booster-boxes",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "baydragon-pokemon-stock-example",
+    "nickname": "baydragon-premium-collection-box",
+    "url": "https://www.baydragon.co.nz/category/01/item/01050100141",
+    "platform": "browser",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
   }
 ]
