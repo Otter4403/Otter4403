@@ -1,39 +1,91 @@
 [
   {
-    "id": "example-restock-watch",
-    "nickname": "surging-sparks-etb",
-    "url": "https://example-store.co.nz/products/surging-sparks-elite-trainer-box",
-    "platform": "shopify",
-    "mode": "stock",
-    "keywords": [],
-    "state": {}
-  },
-  {
-    "id": "example-new-release-watch",
-    "nickname": "storeA-new-pokemon-listings",
-    "url": "https://example-store.co.nz/collections/pokemon-tcg",
-    "platform": "shopify",
+    "id": "kmart-pokemon-new-release",
+    "nickname": "kmart-pokemon-tcg-new",
+    "url": "https://www.kmart.co.nz/category/toys/pokemon-trading-cards/",
+    "platform": "browser",
     "mode": "new-release",
-    "keywords": ["30th anniversary", "anniversary"],
-    "state": {}
-  },
-  {
-    "id": "example-generic-watch",
-    "nickname": "storeB-scarlet-violet-box",
-    "url": "https://example-non-shopify-store.co.nz/product/some-booster-box",
-    "platform": "generic",
-    "mode": "stock",
-    "outOfStockPhrases": ["out of stock", "sold out", "notify me"],
     "keywords": [],
     "state": {}
   },
   {
-    "id": "example-browser-watch",
-    "nickname": "storeC-js-rendered-box",
-    "url": "https://example-headless-commerce-store.co.nz/product/some-booster-box",
+    "id": "kmart-pokemon-stock-example",
+    "nickname": "kmart-ogerpon-ex-premium-collection",
+    "url": "https://www.kmart.co.nz/product/pokemon-trading-card-game:-ogerpon-ex-premium-collection-43519705/",
     "platform": "browser",
     "mode": "stock",
-    "outOfStockPhrases": ["out of stock", "sold out"],
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "warehouse-pokemon-new-release",
+    "nickname": "warehouse-pokemon-tcg-new",
+    "url": "https://www.thewarehouse.co.nz/c/official-merchandise/pok%C3%A9mon/pokemon-trading-cards",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "warehouse-pokemon-stock-example",
+    "nickname": "warehouse-chaos-rising-etb",
+    "url": "https://www.thewarehouse.co.nz/p/pokemon-chaos-rising-elite-trainer-box-limit-2-per-customer/R3074169.html",
+    "platform": "browser",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "mightyape-pokemon-new-release",
+    "nickname": "mightyape-pokemon-tcg-new",
+    "url": "https://www.mightyape.co.nz/mn/pokemon/shop/category/hobbies/trading-cards/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "mightyape-pokemon-stock-example",
+    "nickname": "mightyape-tcg-classic",
+    "url": "https://www.mightyape.co.nz/product/pokemon-trading-card-game-classic/38186796",
+    "platform": "browser",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "ebgames-pokemon-new-release",
+    "nickname": "ebgames-pokemon-new",
+    "url": "https://www.ebgames.co.nz/pokemon",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "ebgames-pokemon-stock-example",
+    "nickname": "ebgames-destined-rivals-portfolio",
+    "url": "https://www.ebgames.co.nz/product/toys-and-collectibles/325069-pokemon-tcg-scarlet-violet-destined-rivals-9-pocket-portfolio",
+    "platform": "browser",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "hobbylords-pokemon-new-release",
+    "nickname": "hobbylords-pokemon-boosters-new",
+    "url": "https://www.hobbylords.co.nz/collections/pokemon-booster-packs-boxes",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "hobbylords-pokemon-stock-example",
+    "nickname": "hobbylords-sv-booster-box",
+    "url": "https://www.hobbylords.co.nz/products/single/pokemon-tcg-scarlet-violet-booster-box",
+    "platform": "browser",
+    "mode": "stock",
     "keywords": [],
     "state": {}
   }

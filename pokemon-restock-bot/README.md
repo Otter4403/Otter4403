@@ -84,6 +84,48 @@ npm start
 You should see `Logged in as <botname>` in the console. In Discord, use
 `/watch-add`, `/watch-list`, `/watch-remove`, `/watch-check`.
 
+### Starter watches for common NZ retailers
+
+`config/watches.example.json` ships with 10 pre-built watches (a
+new-release watch on the Pokemon TCG category page, plus one example
+stock watch on a specific product) for: Kmart NZ, The Warehouse NZ,
+Mighty Ape NZ, EB Games NZ, and Hobby Lords NZ.
+
+A few things to know before you rely on them:
+
+- **I sourced these URLs via web search, not by live-fetching the sites**
+  (this environment's outbound web access is sandboxed) - so treat them
+  as a strong starting point, not guaranteed-current. Run `/watch-check`
+  after adding them and look at `/watch-list` for `lastError` to confirm
+  each one is actually resolving before you trust it.
+- **The category/collection URLs are the durable part** - those should
+  keep working as the store's catalog changes. **The specific product
+  URLs are just examples** of "how to point a stock watch at one item" -
+  that exact product may sell out and get delisted entirely (not just
+  marked out of stock), at which point the watch will start erroring.
+  Swap in whatever product you actually want to track via `/watch-add`.
+- All five are set to `platform: "browser"` since none of them are
+  Shopify: Kmart NZ runs on commercetools (a headless/JS-rendered
+  platform - definitely needs `browser`), and the others are custom
+  platforms where `browser` is the safe default even if `generic` might
+  also work. If you confirm one of them can be scraped with plain HTTP
+  (view-source shows real stock text), switch that watch to `generic`
+  for lower overhead.
+- Hobby Lords' URLs (`/collections/...`, `/products/single/...`) look
+  like they might be a Shopify-based or Shopify-adjacent platform, but I
+  couldn't confirm it. Try `https://www.hobbylords.co.nz/products.json` -
+  if that returns JSON, switch its watches to `platform: "shopify"`,
+  which will be faster and more reliable than `browser`.
+- EB Games in particular is worth watching closely for `lastError` -
+  their AU sibling site runs a Cloudflare Waiting Room and Riskified
+  fraud detection for hyped drops, so even passive `browser` polling
+  could get rate-limited or blocked during a high-demand release. Normal
+  category browsing should be fine most of the time.
+- `keywords` are left empty on all the new-release watches, so you'll
+  get pinged for *every* new listing on each category page, not just
+  ones matching "anniversary" - add keywords via `/watch-add` or by
+  editing the JSON if that's too noisy for a given store.
+
 ### Finding real watch targets
 
 - **Is a store on Shopify?** Visit `https://<store>/products.json` in a
