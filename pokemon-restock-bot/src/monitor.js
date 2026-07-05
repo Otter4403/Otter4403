@@ -4,6 +4,19 @@ const { sendAlert } = require('./notify');
 const { userAgent, pollIntervalMinutes } = require('./config');
 const { checkShopifyStock, checkShopifyNewReleases } = require('./checkers/shopify');
 const { checkGenericStock, checkGenericNewReleases } = require('./checkers/generic');
+const { checkBrowserStock, checkBrowserNewReleases } = require('./checkers/browser');
+
+const STOCK_CHECKERS = {
+  shopify: checkShopifyStock,
+  generic: checkGenericStock,
+  browser: checkBrowserStock,
+};
+
+const NEW_RELEASE_CHECKERS = {
+  shopify: checkShopifyNewReleases,
+  generic: checkGenericNewReleases,
+  browser: checkBrowserNewReleases,
+};
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -17,7 +30,8 @@ async function checkWatch(client, watch) {
   watch.state = watch.state || {};
   try {
     if (watch.mode === 'stock') {
-      const checker = watch.platform === 'shopify' ? checkShopifyStock : checkGenericStock;
+      const checker = STOCK_CHECKERS[watch.platform];
+      if (!checker) throw new Error(`Unknown platform "${watch.platform}"`);
       const result = await checker(watch, userAgent);
       const wasInStock = watch.state.inStock;
       const isFirstCheck = watch.state.lastCheckedAt === undefined;
@@ -40,7 +54,8 @@ async function checkWatch(client, watch) {
     }
 
     if (watch.mode === 'new-release') {
-      const lister = watch.platform === 'shopify' ? checkShopifyNewReleases : checkGenericNewReleases;
+      const lister = NEW_RELEASE_CHECKERS[watch.platform];
+      if (!lister) throw new Error(`Unknown platform "${watch.platform}"`);
       const items = await lister(watch, userAgent);
       const seenIds = new Set(watch.state.seenIds || []);
       const isFirstCheck = watch.state.lastCheckedAt === undefined;

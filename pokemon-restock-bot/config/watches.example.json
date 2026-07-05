@@ -26,5 +26,15 @@
     "outOfStockPhrases": ["out of stock", "sold out", "notify me"],
     "keywords": [],
     "state": {}
+  },
+  {
+    "id": "example-browser-watch",
+    "nickname": "storeC-js-rendered-box",
+    "url": "https://example-headless-commerce-store.co.nz/product/some-booster-box",
+    "platform": "browser",
+    "mode": "stock",
+    "outOfStockPhrases": ["out of stock", "sold out"],
+    "keywords": [],
+    "state": {}
   }
 ]

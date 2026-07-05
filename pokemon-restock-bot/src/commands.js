@@ -18,9 +18,13 @@ const commands = [
       .addStringOption((o) =>
         o
           .setName('platform')
-          .setDescription('Does the store run on Shopify?')
+          .setDescription('How to check this site')
           .setRequired(true)
-          .addChoices({ name: 'Shopify', value: 'shopify' }, { name: 'Generic / other', value: 'generic' })
+          .addChoices(
+            { name: 'Shopify (fast, JSON API)', value: 'shopify' },
+            { name: 'Headless browser (renders JS - works on almost any site)', value: 'browser' },
+            { name: 'Generic HTTP (fast, but only sees server-rendered HTML)', value: 'generic' }
+          )
       )
       .addStringOption((o) =>
         o

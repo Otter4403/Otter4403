@@ -10,18 +10,40 @@ Anniversary product line). Two watch modes:
   when a new product shows up there, optionally filtered to titles/tags
   matching keywords (e.g. `"30th anniversary"`).
 
-It supports two ways of checking a page:
+It supports three ways of checking a page:
 
 - **`shopify`** - a lot of small-to-mid NZ hobby, game and collectibles
   stores run on Shopify, which exposes clean, unauthenticated JSON:
   `https://store.com/products/<handle>.json` and
   `https://store.com/collections/<handle>/products.json`. No scraping,
-  very reliable.
-- **`generic`** - for everything else. It fetches the HTML and looks for
-  common "out of stock" phrasing (or, for new-release mode, extracts
-  product links via a CSS selector). This is a heuristic - tune it per
-  site, and expect it to need occasional adjustment when a store
+  very reliable. Use this whenever the store qualifies - it's the fastest
+  and least fragile option.
+- **`browser`** - loads the page in a real headless Chromium (via
+  Playwright), then reads the fully-rendered page. Use this for sites
+  that build the page with client-side JavaScript (React/Next/headless
+  storefronts - common on big-box retailer sites), where a plain HTTP
+  fetch gets back HTML with no actual product content in it. Slower
+  (a few seconds per check, since it's a real browser) and heavier, but
+  works on far more sites than `generic`.
+- **`generic`** - a plain HTTP fetch that looks for common "out of stock"
+  phrasing in the raw server-rendered HTML (or, for new-release mode,
+  extracts product links via a CSS selector). Fast and cheap, but only
+  useful for sites that don't need JavaScript to show stock/listing
+  content. This is a heuristic either way - tune `outOfStockPhrases` /
+  `selector` per site, and expect occasional adjustment when a store
   redesigns its page.
+
+**What this doesn't do, on purpose:** solve CAPTCHAs, or get you past a
+bot-check/waiting-room queue (e.g. Cloudflare Waiting Room, which some
+retailers run for hyped drops). Those exist specifically to verify a human
+is present or to enforce arrival order - automating past them isn't "checking
+a page faster" anymore, it's a different (and more legally/ethically dicey)
+thing than passive monitoring. If a site has one of those in front of the
+page you want to watch, this bot will fail to see through it, and that's
+deliberate rather than a bug. For sites like that you're on your own for the
+"is it live" moment, same as everyone else in the queue - this bot can still
+watch a level below the queue (e.g. flag when a collection page lists the
+new product at all) as an early heads-up.
 
 ## 1. Create the Discord application
 
@@ -49,6 +71,7 @@ cp .env.example .env
 cp config/watches.example.json config/watches.json
 # edit config/watches.json - see below, or just use /watch-add once the bot is running
 npm install
+npx playwright install chromium   # only needed if you'll use the `browser` platform
 ```
 
 ## 3. Register slash commands and run
@@ -69,11 +92,18 @@ You should see `Logged in as <botname>` in the console. In Discord, use
 - **Collection handle for new-release mode:** open the store's Pokemon
   TCG category page, the URL is usually
   `https://<store>/collections/<handle>`.
-- **Generic sites:** open the product page, use your browser's dev tools
-  to find the phrase that appears when it's sold out (e.g. "Sold Out",
-  "Notify Me"), and put it in `outOfStockPhrases` if it differs from the
-  defaults. For new-release mode, find a CSS selector that matches each
-  product card's link and pass it as `selector` in `/watch-add`.
+- **Not Shopify - does it need `browser` or will `generic` do?** Load the
+  product page, then view-source (or disable JavaScript and reload). If
+  the stock status / "Add to cart" button is still there, `generic` will
+  work and is cheaper. If the page is mostly empty without JS (common on
+  React/Next/headless-commerce storefronts), use `browser` instead.
+- **Tuning the phrase/selector:** open the product page, use your
+  browser's dev tools to find the phrase that appears when it's sold out
+  (e.g. "Sold Out", "Notify Me"), and put it in `outOfStockPhrases` if it
+  differs from the defaults. For new-release mode, find a CSS selector
+  that matches each product card's link and pass it as `selector` in
+  `/watch-add`. Both work the same way for `generic` and `browser` - the
+  only difference is whether JS has run before the page is read.
 
 ### Watch JSON schema (for hand-editing `config/watches.json`)
 
@@ -82,11 +112,11 @@ You should see `Logged in as <botname>` in the console. In Discord, use
   "id": "any-unique-string",
   "nickname": "short-name",           // shown in alerts, must be unique
   "url": "https://...",               // product page (stock mode) or collection/category page (new-release mode)
-  "platform": "shopify" | "generic",
+  "platform": "shopify" | "browser" | "generic",
   "mode": "stock" | "new-release",
   "keywords": ["30th anniversary"],   // new-release mode only; empty array = alert on every new listing
-  "selector": "a.product-card",       // generic + new-release mode only; CSS selector for product links
-  "outOfStockPhrases": ["sold out"],  // generic + stock mode only; overrides the built-in phrase list
+  "selector": "a.product-card",       // browser/generic + new-release mode only; CSS selector for product links
+  "outOfStockPhrases": ["sold out"],  // browser/generic + stock mode only; overrides the built-in phrase list
   "state": {}                         // managed by the bot, leave as {} for new watches
 }
 ```
@@ -116,11 +146,16 @@ restock. Options:
 - Set a real contact email in `USER_AGENT` so a store operator can reach
   you if your traffic looks like a problem.
 - This bot only *alerts you* - it doesn't auto-checkout or auto-add to
-  cart. You still have to actually buy the thing fast; this just saves
+  cart, solve CAPTCHAs, or bypass bot-check/waiting-room queues. You
+  still have to actually buy the thing fast and get through whatever
+  human-verification the store puts in front of you; this just saves
   you from manually refreshing tabs all day.
-- The `generic` stock check is a heuristic based on page text. Some
-  storefronts render stock status client-side via JavaScript that a
-  plain HTTP fetch won't execute - if a `generic` watch seems to always
-  report "in stock" or never flips, that store may need a headless
-  browser (out of scope here, but `playwright` could be swapped in for
-  that specific checker if needed).
+- Both `generic` and `browser` stock checks are heuristics based on page
+  text (`outOfStockPhrases`) - they can false-positive/negative if a
+  store's wording doesn't match the defaults, so tune per site and treat
+  `/watch-list`'s reported status as a hint, not gospel.
+- `browser` still won't work against a page that requires solving an
+  interactive challenge (a real CAPTCHA, "click and hold" verification,
+  etc.) before showing content - Playwright renders JS, but it doesn't
+  pretend to be a human passing a human-verification test. That's an
+  intentional limit, not a bug to file.
