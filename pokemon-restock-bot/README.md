@@ -86,10 +86,25 @@ You should see `Logged in as <botname>` in the console. In Discord, use
 
 ### Starter watches for common NZ retailers
 
-`config/watches.example.json` ships with 10 pre-built watches (a
-new-release watch on the Pokemon TCG category page, plus one example
-stock watch on a specific product) for: Kmart NZ, The Warehouse NZ,
-Mighty Ape NZ, EB Games NZ, and Hobby Lords NZ.
+`config/watches.example.json` ships with 15 pre-built watches - for each
+of Kmart NZ, The Warehouse NZ, Mighty Ape NZ, EB Games NZ, and Hobby
+Lords NZ: a new-release watch on the Pokemon TCG category page, one
+example stock watch on a specific product, and a new-release watch on
+the site's **homepage**.
+
+The homepage watches exist because a big drop (like a 30th Anniversary
+set) sometimes shows up as a homepage banner or dedicated campaign page
+before it's properly filed under the Pokemon category - watching the
+homepage too catches that earlier. They're filtered to `keywords:
+["pokemon"]` since a homepage links to everything the store sells, not
+just Pokemon products - without that filter you'd get pinged for every
+new mattress and lawnmower too. Two limitations worth knowing: (1) the
+new-release matcher only looks at link text/title attributes, so a
+banner that's just a bare image link with no "Pokemon" text won't match
+even if it's promoting a drop - and (2) `outOfStockPhrases`/keyword
+matching against a homepage will inherently be noisier than a dedicated
+category page, so expect to tune the keyword list or selector if a
+particular store's homepage watch turns out too chatty (or too quiet).
 
 A few things to know before you rely on them:
 

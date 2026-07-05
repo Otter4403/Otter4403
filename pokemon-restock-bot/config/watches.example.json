@@ -18,6 +18,15 @@
     "state": {}
   },
   {
+    "id": "kmart-homepage-new-release",
+    "nickname": "kmart-homepage-pokemon",
+    "url": "https://www.kmart.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
+    "state": {}
+  },
+  {
     "id": "warehouse-pokemon-new-release",
     "nickname": "warehouse-pokemon-tcg-new",
     "url": "https://www.thewarehouse.co.nz/c/official-merchandise/pok%C3%A9mon/pokemon-trading-cards",
@@ -33,6 +42,16 @@
     "platform": "browser",
     "mode": "stock",
     "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "warehouse-homepage-new-release",
+    "nickname": "warehouse-homepage-pokemon",
+    "url": "https://www.thewarehouse.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
+    "selector": "a[href*=\"/p/\"]",
     "state": {}
   },
   {
@@ -54,6 +73,15 @@
     "state": {}
   },
   {
+    "id": "mightyape-homepage-new-release",
+    "nickname": "mightyape-homepage-pokemon",
+    "url": "https://www.mightyape.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
+    "state": {}
+  },
+  {
     "id": "ebgames-pokemon-new-release",
     "nickname": "ebgames-pokemon-new",
     "url": "https://www.ebgames.co.nz/pokemon",
@@ -72,6 +100,15 @@
     "state": {}
   },
   {
+    "id": "ebgames-homepage-new-release",
+    "nickname": "ebgames-homepage-pokemon",
+    "url": "https://www.ebgames.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
+    "state": {}
+  },
+  {
     "id": "hobbylords-pokemon-new-release",
     "nickname": "hobbylords-pokemon-boosters-new",
     "url": "https://www.hobbylords.co.nz/collections/pokemon-booster-packs-boxes",
@@ -87,6 +124,15 @@
     "platform": "browser",
     "mode": "stock",
     "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "hobbylords-homepage-new-release",
+    "nickname": "hobbylords-homepage-pokemon",
+    "url": "https://www.hobbylords.co.nz/",
+    "platform": "browser",
+    "mode": "new-release",
+    "keywords": ["pokemon"],
     "state": {}
   }
 ]
