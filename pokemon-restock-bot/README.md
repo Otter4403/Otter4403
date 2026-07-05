@@ -89,11 +89,19 @@ actually works, without waiting for a real restock.
 
 ### Starter watches for common NZ retailers
 
-`config/watches.example.json` ships with 18 pre-built watches - for each
-of Kmart NZ, The Warehouse NZ, Mighty Ape NZ, EB Games NZ, Hobby Lords
-NZ, and Farmers NZ: a new-release watch on the Pokemon TCG category
-page, one example stock watch on a specific product, and a new-release
-watch on the site's **homepage**.
+`config/watches.example.json` ships with 15 pre-built watches - for each
+of Kmart NZ, The Warehouse NZ, Mighty Ape NZ, Hobby Lords NZ, and
+Farmers NZ: a new-release watch on the Pokemon TCG category page, one
+example stock watch on a specific product, and a new-release watch on
+the site's **homepage**.
+
+**Note: EB Games NZ is not in this list.** EB Games closed all 38 New
+Zealand stores on 31 January 2026 (multi-million dollar losses) - by
+the time you're reading this it's been shut for months, so I removed
+the watches I'd previously added for it. NZ customers can still buy
+online via `ebgames.com.au`, but that's a different (Australian) retailer
+with no NZ physical stores, so it's not relevant to store-level stock
+anyway.
 
 The homepage watches exist because a big drop (like a 30th Anniversary
 set) sometimes shows up as a homepage banner or dedicated campaign page
@@ -122,7 +130,7 @@ A few things to know before you rely on them:
   that exact product may sell out and get delisted entirely (not just
   marked out of stock), at which point the watch will start erroring.
   Swap in whatever product you actually want to track via `/watch-add`.
-- All six are set to `platform: "browser"` since none of them are
+- All five are set to `platform: "browser"` since none of them are
   Shopify: Kmart NZ runs on commercetools (a headless/JS-rendered
   platform - definitely needs `browser`), Farmers NZ runs on SAP
   Commerce, and the others are custom platforms where `browser` is the
@@ -142,11 +150,6 @@ A few things to know before you rely on them:
   couldn't confirm it. Try `https://www.hobbylords.co.nz/products.json` -
   if that returns JSON, switch its watches to `platform: "shopify"`,
   which will be faster and more reliable than `browser`.
-- EB Games in particular is worth watching closely for `lastError` -
-  their AU sibling site runs a Cloudflare Waiting Room and Riskified
-  fraud detection for hyped drops, so even passive `browser` polling
-  could get rate-limited or blocked during a high-demand release. Normal
-  category browsing should be fine most of the time.
 - `keywords` are left empty on all the new-release watches, so you'll
   get pinged for *every* new listing on each category page, not just
   ones matching "anniversary" - add keywords via `/watch-add` or by

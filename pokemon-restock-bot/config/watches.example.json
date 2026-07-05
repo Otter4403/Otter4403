@@ -82,33 +82,6 @@
     "state": {}
   },
   {
-    "id": "ebgames-pokemon-new-release",
-    "nickname": "ebgames-pokemon-new",
-    "url": "https://www.ebgames.co.nz/pokemon",
-    "platform": "browser",
-    "mode": "new-release",
-    "keywords": [],
-    "state": {}
-  },
-  {
-    "id": "ebgames-pokemon-stock-example",
-    "nickname": "ebgames-destined-rivals-portfolio",
-    "url": "https://www.ebgames.co.nz/product/toys-and-collectibles/325069-pokemon-tcg-scarlet-violet-destined-rivals-9-pocket-portfolio",
-    "platform": "browser",
-    "mode": "stock",
-    "keywords": [],
-    "state": {}
-  },
-  {
-    "id": "ebgames-homepage-new-release",
-    "nickname": "ebgames-homepage-pokemon",
-    "url": "https://www.ebgames.co.nz/",
-    "platform": "browser",
-    "mode": "new-release",
-    "keywords": ["pokemon"],
-    "state": {}
-  },
-  {
     "id": "hobbylords-pokemon-new-release",
     "nickname": "hobbylords-pokemon-boosters-new",
     "url": "https://www.hobbylords.co.nz/collections/pokemon-booster-packs-boxes",
