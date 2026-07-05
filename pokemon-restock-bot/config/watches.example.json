@@ -1,0 +1,30 @@
+[
+  {
+    "id": "example-restock-watch",
+    "nickname": "surging-sparks-etb",
+    "url": "https://example-store.co.nz/products/surging-sparks-elite-trainer-box",
+    "platform": "shopify",
+    "mode": "stock",
+    "keywords": [],
+    "state": {}
+  },
+  {
+    "id": "example-new-release-watch",
+    "nickname": "storeA-new-pokemon-listings",
+    "url": "https://example-store.co.nz/collections/pokemon-tcg",
+    "platform": "shopify",
+    "mode": "new-release",
+    "keywords": ["30th anniversary", "anniversary"],
+    "state": {}
+  },
+  {
+    "id": "example-generic-watch",
+    "nickname": "storeB-scarlet-violet-box",
+    "url": "https://example-non-shopify-store.co.nz/product/some-booster-box",
+    "platform": "generic",
+    "mode": "stock",
+    "outOfStockPhrases": ["out of stock", "sold out", "notify me"],
+    "keywords": [],
+    "state": {}
+  }
+]
