@@ -21,6 +21,9 @@ class MeasurementsOut(BaseModel):
     surface: float
     corner_details: Dict[str, float]
     edge_details: Dict[str, float]
+    explanations: Dict[str, str]
+    annotated_front_base64: str
+    annotated_back_base64: str
 
 
 class GradeResponse(BaseModel):

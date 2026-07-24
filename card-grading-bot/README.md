@@ -35,6 +35,13 @@ from each company before you ever mail it in.
 5. The web UI shows all six slabs and grades side by side with the
    underlying subgrades and measurements, so you can compare how each
    company's rules treat the same card.
+6. A "Why this grade?" panel (`vision/annotate.py` + `explanations.py`)
+   shows exactly what drove the four condition scores: your front and back
+   photos with the detected centering border lines, a color-coded bracket
+   at each corner and strip along each edge (green/amber/red by score), and
+   a highlight over any area flagged as a surface blemish -- plus a
+   plain-English sentence per attribute naming the weakest corner/edge and
+   how far off centering is, so a 9.5 isn't just a number.
 
 The slab images are original artwork, not reproductions of any company's
 actual holder design, logo, hologram, or barcode. What they do borrow are
@@ -91,6 +98,10 @@ tests use small synthetic images (solid-color rectangles standing in for a
 card and its border) so they run fast and don't require real card photos.
 The slab-rendering tests check that every company renders a valid PNG and
 that long names/labels get truncated instead of overlapping other text.
+The annotation and explanation tests check that the diagnostic overlay
+renders for edge cases (missing corner/edge data, an empty blemish mask,
+no centering measurement for the back photo) and that the generated
+sentences correctly name the weakest corner/edge/side.
 
 ## Project layout
 
@@ -100,10 +111,14 @@ card-grading-bot/
     app/
       main.py            FastAPI app, /api/grade endpoint, serves the frontend
       models.py           Pydantic request/response schemas
+      explanations.py      Builds the plain-English "why this grade" text per attribute
       grading/            Per-company rule engines (pure functions, no images involved)
-      vision/              OpenCV pipeline: card detection, centering, corners, edges, surface
-      rendering/           Pillow-based slab mockup generator + bundled DejaVu font
-    tests/                 pytest unit tests for grading rules, vision helpers, and slab rendering
+      vision/              OpenCV pipeline: card detection, centering, corners, edges, surface,
+                           plus annotate.py for the diagnostic overlay image
+      rendering/           Pillow-based slab mockup generator
+      fonts/                Bundled DejaVu Sans/Bold, shared by rendering/ and vision/annotate.py
+    tests/                 pytest unit tests for grading rules, vision helpers, slab rendering,
+                           annotation, and explanations
     requirements.txt
   frontend/
     index.html / style.css / app.js   Drag-and-drop upload UI, no build step

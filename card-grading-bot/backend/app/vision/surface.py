@@ -21,6 +21,9 @@ BLEMISH_THRESHOLD = 18
 class SurfaceResult:
     score: float
     blemish_fraction: float
+    blemish_mask: np.ndarray  # boolean mask, sized to the interior crop
+    margin_y: int             # interior crop's offset from the full card image
+    margin_x: int
 
 
 def _interior(card_img: np.ndarray) -> np.ndarray:
@@ -30,9 +33,13 @@ def _interior(card_img: np.ndarray) -> np.ndarray:
 
 
 def measure_surface(card_img: np.ndarray) -> SurfaceResult:
+    h, w = card_img.shape[:2]
+    margin_y, margin_x = int(h * INTERIOR_MARGIN_FRACTION), int(w * INTERIOR_MARGIN_FRACTION)
     interior = _interior(card_img)
     if interior.size == 0:
-        return SurfaceResult(score=10.0, blemish_fraction=0.0)
+        return SurfaceResult(score=10.0, blemish_fraction=0.0,
+                              blemish_mask=np.zeros((0, 0), dtype=bool),
+                              margin_y=margin_y, margin_x=margin_x)
 
     gray = cv2.cvtColor(interior, cv2.COLOR_BGR2GRAY)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (KERNEL_SIZE, KERNEL_SIZE))
@@ -44,4 +51,5 @@ def measure_surface(card_img: np.ndarray) -> SurfaceResult:
     blemish_fraction = float(blemish_mask.mean())
 
     score = 10.0 - np.clip(blemish_fraction * 40.0, 0, 9.0)
-    return SurfaceResult(score=float(score), blemish_fraction=blemish_fraction)
+    return SurfaceResult(score=float(score), blemish_fraction=blemish_fraction,
+                          blemish_mask=blemish_mask, margin_y=margin_y, margin_x=margin_x)

@@ -5,10 +5,12 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .explanations import build_explanations
 from .grading import grade_all
 from .models import GradeResponse, MeasurementsOut
 from .rendering import render_slab_png
 from .vision import analyze_card, decode_image
+from .vision.annotate import render_annotated_photo
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per image
 
@@ -49,6 +51,15 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     subgrades = analysis.subgrades
     results = grade_all(subgrades)
 
+    explanations = build_explanations(subgrades, analysis.front_surface, analysis.back_surface)
+    annotated_front = render_annotated_photo(
+        analysis.front_card, analysis.front_corners, analysis.front_edges,
+        analysis.front_surface, centering=analysis.front_centering,
+    )
+    annotated_back = render_annotated_photo(
+        analysis.back_card, analysis.back_corners, analysis.back_edges, analysis.back_surface,
+    )
+
     measurements = MeasurementsOut(
         centering_lr=list(subgrades.centering_lr),
         centering_tb=list(subgrades.centering_tb),
@@ -57,6 +68,9 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
         surface=round(subgrades.surface, 2),
         corner_details={k: round(v, 2) for k, v in (subgrades.corner_details or {}).items()},
         edge_details={k: round(v, 2) for k, v in (subgrades.edge_details or {}).items()},
+        explanations=explanations,
+        annotated_front_base64=base64.b64encode(annotated_front).decode("ascii"),
+        annotated_back_base64=base64.b64encode(annotated_back).decode("ascii"),
     )
 
     results_out = []

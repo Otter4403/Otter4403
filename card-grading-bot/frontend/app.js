@@ -60,6 +60,23 @@ function renderMeasurements(m) {
     .join("");
 }
 
+const EXPLANATION_LABELS = {
+  centering: "Centering",
+  corners: "Corners",
+  edges: "Edges",
+  surface: "Surface",
+};
+
+function renderDiagnostics(m) {
+  document.getElementById("annotated-front").src = `data:image/png;base64,${m.annotated_front_base64}`;
+  document.getElementById("annotated-back").src = `data:image/png;base64,${m.annotated_back_base64}`;
+
+  const list = document.getElementById("explanation-list");
+  list.innerHTML = Object.entries(EXPLANATION_LABELS)
+    .map(([key, label]) => `<li><strong>${label}:</strong> ${m.explanations[key] || ""}</li>`)
+    .join("");
+}
+
 const ACCENT_VARS = {
   PSA: "--psa",
   "Beckett (BGS)": "--bgs",
@@ -109,6 +126,7 @@ async function submitGrade() {
       throw new Error(err.detail || `Request failed (${res.status})`);
     }
     const data = await res.json();
+    renderDiagnostics(data.measurements);
     renderMeasurements(data.measurements);
     renderResults(data.results);
     document.getElementById("results").hidden = false;

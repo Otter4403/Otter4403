@@ -71,6 +71,30 @@
 
     <section id="results" class="results" hidden>
       <h2>Estimated Grades</h2>
+
+      <div class="diagnostics">
+        <h3>Why this grade?</h3>
+        <p class="diagnostics-intro">Here's exactly what the vision pipeline measured on your photos.</p>
+        <div class="diagnostic-legend">
+          <span><i class="dot dot-good"></i> Strong (9.5+)</span>
+          <span><i class="dot dot-fair"></i> Minor wear (8.0&ndash;9.5)</span>
+          <span><i class="dot dot-poor"></i> Notable wear (&lt;8.0)</span>
+          <span><i class="dot dot-centering"></i> Centering lines</span>
+          <span><i class="dot dot-blemish"></i> Surface flag</span>
+        </div>
+        <div class="diagnostic-photos">
+          <figure>
+            <img id="annotated-front" class="diagnostic-image" alt="Front of card with grading measurements marked" />
+            <figcaption>Front</figcaption>
+          </figure>
+          <figure>
+            <img id="annotated-back" class="diagnostic-image" alt="Back of card with grading measurements marked" />
+            <figcaption>Back</figcaption>
+          </figure>
+        </div>
+        <ul id="explanation-list" class="explanation-list"></ul>
+      </div>
+
       <div id="measurements" class="measurements"></div>
       <div id="result-cards" class="result-cards"></div>
     </section>

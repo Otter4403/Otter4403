@@ -275,6 +275,107 @@ button#grade-btn:not(:disabled):active {
   margin-bottom: 1.25rem;
 }
 
+/* ---------- Diagnostics ("why this grade?") ---------- */
+
+.diagnostics {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.diagnostics h3 {
+  margin: 0 0 0.25rem;
+}
+
+.diagnostics-intro {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0 0 0.9rem;
+}
+
+.diagnostic-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.diagnostic-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.dot-good { background: #3a9e6c; }
+.dot-fair { background: #d49e2a; }
+.dot-poor { background: #ce2e42; }
+.dot-centering { background: #3c8ce6; }
+.dot-blemish { background: #e65a28; }
+
+.diagnostic-photos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.diagnostic-photos figure {
+  margin: 0;
+  text-align: center;
+}
+
+.diagnostic-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.diagnostic-photos figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.explanation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.explanation-list li {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--border);
+}
+
+.explanation-list li:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.explanation-list strong {
+  color: var(--text);
+}
+
 .measurements {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));

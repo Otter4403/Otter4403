@@ -6,10 +6,10 @@ import numpy as np
 
 from ..grading.base import SubGrades
 from .preprocess import detect_card
-from .centering import measure_centering
-from .corners import measure_corners
-from .edges import measure_edges
-from .surface import measure_surface
+from .centering import CenteringResult, measure_centering
+from .corners import CornerResult, measure_corners
+from .edges import EdgeResult, measure_edges
+from .surface import SurfaceResult, measure_surface
 
 CORNER_FRONT_WEIGHT = 0.6
 EDGE_FRONT_WEIGHT = 0.6
@@ -20,6 +20,15 @@ class AnalysisResult:
     subgrades: SubGrades
     front_card: np.ndarray
     back_card: np.ndarray
+    # Raw per-side measurements, kept around so the diagnostic overlay can
+    # show exactly what was measured on each photo.
+    front_centering: CenteringResult
+    front_corners: CornerResult
+    back_corners: CornerResult
+    front_edges: EdgeResult
+    back_edges: EdgeResult
+    front_surface: SurfaceResult
+    back_surface: SurfaceResult
 
 
 def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
@@ -67,4 +76,10 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
         edge_details=edge_details,
         notes=notes,
     )
-    return AnalysisResult(subgrades=subgrades, front_card=front, back_card=back)
+    return AnalysisResult(
+        subgrades=subgrades, front_card=front, back_card=back,
+        front_centering=centering,
+        front_corners=corners_front, back_corners=corners_back,
+        front_edges=edges_front, back_edges=edges_back,
+        front_surface=surface_front, back_surface=surface_back,
+    )

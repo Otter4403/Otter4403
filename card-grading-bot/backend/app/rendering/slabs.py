@@ -21,7 +21,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-FONTS_DIR = Path(__file__).resolve().parent / "fonts"
+FONTS_DIR = Path(__file__).resolve().parent.parent / "fonts"
 
 CANVAS_W = 340
 CANVAS_H = 560
