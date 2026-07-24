@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Card Grading Bot</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="hero">
+    <h1>Card Grading Bot</h1>
+    <p class="tagline">Upload front &amp; back photos of a trading card to get an estimated grade under PSA, Beckett (BGS), CGC, and TAG-style rules.</p>
+  </header>
+
+  <main class="container">
+    <section class="disclaimer">
+      <strong>Unofficial estimator, for reference only.</strong>
+      Not affiliated with, endorsed by, or a substitute for grading from PSA,
+      Beckett Grading Services, CGC Cards, or TAG Grading. Results are
+      approximations from photo analysis and public grading guides &mdash;
+      real submissions are graded in hand by professional graders.
+    </section>
+
+    <section class="uploader">
+      <div class="drop-grid">
+        <label class="drop-zone" id="drop-front">
+          <input type="file" id="front-input" accept="image/*" hidden />
+          <span class="drop-label">Front of card</span>
+          <img id="front-preview" class="preview" hidden />
+          <span class="drop-hint">Click or drag an image</span>
+        </label>
+        <label class="drop-zone" id="drop-back">
+          <input type="file" id="back-input" accept="image/*" hidden />
+          <span class="drop-label">Back of card</span>
+          <img id="back-preview" class="preview" hidden />
+          <span class="drop-hint">Click or drag an image</span>
+        </label>
+      </div>
+      <button id="grade-btn" disabled>Grade My Card</button>
+      <p id="status-msg" class="status-msg" hidden></p>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <h2>Estimated Grades</h2>
+      <div id="measurements" class="measurements"></div>
+      <div id="result-cards" class="result-cards"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Card Grading Bot &mdash; an independent, open-source estimation tool.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

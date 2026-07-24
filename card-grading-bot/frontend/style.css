@@ -1,0 +1,243 @@
+:root {
+  --bg: #0f1115;
+  --panel: #171a21;
+  --panel-2: #1f232c;
+  --border: #2a2f3a;
+  --text: #e8eaed;
+  --muted: #9aa1ab;
+  --accent: #5b8cff;
+  --accent-2: #37c2a1;
+  --warn-bg: #2a2314;
+  --warn-border: #6b5a1f;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --panel-2: #f0f1f4;
+    --border: #dde0e6;
+    --text: #1a1d23;
+    --muted: #5b6270;
+    --warn-bg: #fff8e6;
+    --warn-border: #e8d38a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hero {
+  padding: 3rem 1.5rem 1.5rem;
+  text-align: center;
+}
+
+.hero h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2.2rem;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.tagline {
+  color: var(--muted);
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.container {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.disclaimer {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  margin-bottom: 2rem;
+}
+
+.drop-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 40rem) {
+  .drop-grid { grid-template-columns: 1fr; }
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--panel);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  min-height: 12rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  text-align: center;
+}
+
+.drop-zone.dragover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.drop-label {
+  font-weight: 600;
+}
+
+.drop-hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.preview {
+  max-width: 100%;
+  max-height: 9rem;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+button#grade-btn {
+  display: block;
+  width: 100%;
+  padding: 0.9rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.05s ease;
+}
+
+button#grade-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button#grade-btn:not(:disabled):active {
+  transform: scale(0.99);
+}
+
+.status-msg {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 0.75rem;
+}
+
+.status-msg.error {
+  color: #e5624e;
+}
+
+.results {
+  margin-top: 2.5rem;
+}
+
+.measurements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.measure-tile {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+}
+
+.measure-tile .label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.measure-tile .value {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.result-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.result-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+}
+
+.result-card .company {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.result-card .grade {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0.15rem 0;
+}
+
+.result-card .label {
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+
+.result-card .sub-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.7rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.result-card .sub-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.15rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+
+.result-card .notes {
+  font-size: 0.75rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  padding: 2rem 0;
+}

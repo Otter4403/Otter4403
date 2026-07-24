@@ -28,6 +28,10 @@ I'm a New Zealand-based university student specializing in Finance and Business 
 - XPath for data extraction
 - Advanced Excel functions and modeling
 
+## Featured Project
+
+- 🃏 [Card Grading Bot](./card-grading-bot) &mdash; a web app that estimates trading card grades from photos, modeling PSA, Beckett (BGS), CGC, and TAG grading standards with an OpenCV vision pipeline and a FastAPI backend.
+
 ## Find Me On
 
 [![GitHub](https://img.shields.io/badge/GitHub-Otter4403-181717?style=flat&logo=github)](https://github.com/Otter4403)

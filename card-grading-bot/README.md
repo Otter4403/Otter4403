@@ -1,0 +1,95 @@
+# Card Grading Bot
+
+An unofficial web app that estimates a trading card's grade from front/back
+photos, modeled on the publicly described condition standards used by
+**PSA**, **Beckett Grading Services (BGS)**, **CGC Cards**, and **TAG
+Grading**.
+
+> **Not affiliated with PSA, BGS, CGC, or TAG.** None of these companies
+> publish their exact internal grading formulas, so every scoring rule here
+> is this project's own best-effort approximation built from each
+> company's public grading guides and widely documented collector
+> knowledge. Treat results as a rough, pre-submission gut check -- not a
+> substitute for a real submission, and not proof of what any of these
+> companies would actually assign.
+
+## What it does
+
+1. You upload a front and back photo of a card through the web UI.
+2. A small computer-vision pipeline (OpenCV):
+   - finds the card in the photo and straightens/crops it (`vision/preprocess.py`)
+   - measures **centering** by locating the border-to-artwork line on each side (`vision/centering.py`)
+   - scores **corners** for whitening/wear and tip sharpness (`vision/corners.py`)
+   - scores **edges** for whitening/chipping along each side (`vision/edges.py`)
+   - scores **surface** for scratches/print defects/stains (`vision/surface.py`)
+3. Those four measurements feed independent rule engines for each company
+   (`grading/psa.py`, `grading/beckett.py`, `grading/cgc.py`, `grading/tag.py`),
+   each applying that company's own scale, granularity, and combination
+   logic, described in each module's docstring.
+4. The web UI shows all four grades side by side with the underlying
+   subgrades and measurements.
+
+## How each company's rules are approximated
+
+| Company | Scale | Combination logic (our approximation) |
+|---|---|---|
+| PSA | 1-10, whole numbers | "Weakest link": overall = min(centering, corners, edges, surface), matching PSA's public grade descriptions where a single flaw caps the grade. |
+| Beckett (BGS) | 1-10, half points | Weighted average of the four subgrades, capped at (lowest subgrade + 1.0); a Black Label 10 requires all four subgrades to be a perfect 10. |
+| CGC | 1-10, half points | Evenly-weighted average of the four subgrades, capped at (lowest subgrade + 1.5), approximating CGC's holistic "eye appeal" review process. |
+| TAG | 1.0-10.0, tenth points | Weighted composite across centering, all 4 individual corner subgrades, all 4 individual edge subgrades, and surface -- mirroring TAG's own description of automated, per-component measurement. |
+
+Centering itself is scored on a linear scale where a perfect 50/50 split
+maps to the top score and a 95/5 (or worse) split maps to the bottom score;
+this linear model is our own stand-in for each company's undisclosed
+internal centering charts.
+
+## Running it locally
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate   # optional but recommended
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Then open `http://127.0.0.1:8000/` in a browser, upload a front and back
+photo, and click **Grade My Card**.
+
+## Running the tests
+
+```bash
+cd backend
+python3 -m pytest tests/ -v
+```
+
+The grading-rule tests are pure unit tests (no images needed). The vision
+tests use small synthetic images (solid-color rectangles standing in for a
+card and its border) so they run fast and don't require real card photos.
+
+## Project layout
+
+```
+card-grading-bot/
+  backend/
+    app/
+      main.py            FastAPI app, /api/grade endpoint, serves the frontend
+      models.py           Pydantic request/response schemas
+      grading/            Per-company rule engines (pure functions, no images involved)
+      vision/              OpenCV pipeline: card detection, centering, corners, edges, surface
+    tests/                 pytest unit tests for both grading rules and vision helpers
+    requirements.txt
+  frontend/
+    index.html / style.css / app.js   Drag-and-drop upload UI, no build step
+```
+
+## Known limitations
+
+- Photo quality, lighting, angle, and background contrast all affect
+  detection accuracy -- a well-lit photo directly above the card on a
+  plain, contrasting background works best.
+- The corner/edge/surface heuristics look for whitening and texture
+  anomalies; they can be fooled by cards with naturally light borders/art
+  or by glare, reflections, and sleeves/toploaders in the photo.
+- The company rule engines are deliberately transparent approximations,
+  not reverse-engineered proprietary algorithms -- expect real submissions
+  to disagree with this tool sometimes.
