@@ -56,6 +56,22 @@ def test_render_slab_png_handles_unusually_long_names_without_crashing():
     assert len(png_bytes) > 0
 
 
+def test_render_slab_png_with_card_label_does_not_crash_and_differs_from_without():
+    without_label = render_slab_png(make_card(), "psa", 10.0, "Gem Mint", cert_seed=b"seed")
+    with_label = render_slab_png(make_card(), "psa", 10.0, "Gem Mint", cert_seed=b"seed",
+                                  card_label="2023 TOPPS CHROME SHOHEI OHTANI #27 REFRACTOR")
+    assert len(with_label) > 0
+    assert with_label != without_label
+
+
+def test_render_slab_png_truncates_an_overlong_card_label():
+    png_bytes = render_slab_png(
+        make_card(), "cgc", 9.5, "Gem Mint", cert_seed=b"seed",
+        card_label="A" * 500,
+    )
+    assert len(png_bytes) > 0
+
+
 def test_truncate_to_width_never_exceeds_the_limit():
     img = Image.new("RGB", (10, 10))
     draw = ImageDraw.Draw(img)

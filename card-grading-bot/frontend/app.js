@@ -79,6 +79,35 @@ function renderDiagnostics(m) {
     .join("");
 }
 
+function renderCardId(identification) {
+  const el = document.getElementById("card-id");
+  if (!identification) {
+    el.hidden = true;
+    el.innerHTML = "";
+    el.classList.remove("unidentified");
+    return;
+  }
+
+  if (!identification.identified) {
+    el.classList.add("unidentified");
+    el.innerHTML = `<span class="card-id-icon">🔍</span><span>Couldn't confidently identify this card from the photo.</span>`;
+    el.hidden = false;
+    return;
+  }
+
+  el.classList.remove("unidentified");
+  const confidenceNote = identification.confidence === "low"
+    ? " &mdash; low confidence, double-check this"
+    : "";
+  el.innerHTML = `
+    <span class="card-id-icon">🔍</span>
+    <div>
+      <div class="card-id-title">${identification.label_line}</div>
+      <div class="card-id-meta">Identified from your photo by AI${confidenceNote}. Verify it's correct.</div>
+    </div>`;
+  el.hidden = false;
+}
+
 function renderQualityWarnings(warnings) {
   const el = document.getElementById("quality-warnings");
   if (!warnings || warnings.length === 0) {
@@ -150,6 +179,7 @@ async function submitGrade() {
       throw new Error(formatApiError(err, res.status));
     }
     const data = await res.json();
+    renderCardId(data.card_identification);
     renderQualityWarnings(data.quality_warnings);
     renderDiagnostics(data.measurements);
     renderMeasurements(data.measurements);

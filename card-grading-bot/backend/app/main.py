@@ -1,12 +1,14 @@
 import base64
 from pathlib import Path
 
+import cv2
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .explanations import build_explanations
 from .grading import grade_all
+from .identification import identify_card
 from .models import GradeResponse, MeasurementsOut
 from .rendering import render_slab_png
 from .vision import analyze_card, decode_image, has_blocking_issue
@@ -59,6 +61,10 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     subgrades = analysis.subgrades
     results = grade_all(subgrades)
 
+    _, front_card_buf = cv2.imencode(".jpg", analysis.front_card)
+    identification = await identify_card(front_card_buf.tobytes())
+    card_label = identification.label_line if identification and identification.identified else None
+
     explanations = build_explanations(subgrades, analysis.front_surface, analysis.back_surface)
     annotated_front = render_annotated_photo(
         analysis.front_card, analysis.front_corners, analysis.front_edges,
@@ -88,7 +94,7 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     for company_key, result in results.items():
         slab_png = render_slab_png(
             analysis.front_card, company_key, result.overall, result.label,
-            cert_seed=front_bytes, subgrades=result.subgrades,
+            cert_seed=front_bytes, subgrades=result.subgrades, card_label=card_label,
         )
         results_out.append({
             **result.to_dict(),
@@ -101,6 +107,8 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
         measurements=measurements,
         results=results_out,
         quality_warnings=[{"side": i.side, "code": i.code, "message": i.message} for i in warnings],
+        card_identification=identification.__dict__ | {"label_line": identification.label_line}
+        if identification else None,
     )
 
 

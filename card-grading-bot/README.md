@@ -51,6 +51,15 @@ from each company before you ever mail it in.
    non-blocking "these photos could be clearer" banner. The web UI also has
    a collapsible photo-taking tips panel (lighting, angle, background,
    focus, resolution) above the upload area.
+8. Optionally, `identification.py` reads the card itself off the front
+   photo using Claude's vision API -- year, set/brand, player or character
+   name, card number, and any parallel/variation -- and shows it the way a
+   real grading label would (e.g. "2023 TOPPS CHROME SHOHEI OHTANI #27
+   REFRACTOR"), both above the results and on each slab mockup. This needs
+   an `ANTHROPIC_API_KEY` environment variable (see below); without one,
+   grading works exactly the same, just without this line. It's AI-read
+   from the photo, not guaranteed correct -- the UI always says so and
+   flags low-confidence reads.
 
 The slab images are original artwork, not reproductions of any company's
 actual holder design, logo, hologram, or barcode. What they do borrow are
@@ -121,6 +130,22 @@ uvicorn app.main:app --reload
 Then open `http://127.0.0.1:8000/` in a browser, upload a front and back
 photo, and click **Grade My Card**.
 
+### Optional: card identification
+
+To have Otter Grading read the card's name/set/year off the photo (via
+Claude's vision API), set an environment variable before starting the
+server:
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...   # from https://console.anthropic.com/
+```
+
+On Railway, add it as a variable on the service (Settings → Variables).
+Each grading request that includes identification costs a small fraction
+of a cent (it uses Haiku by default; override with `CARD_ID_MODEL` if you
+want a different model). Leave it unset and everything else works exactly
+the same, just without the identified card name showing up.
+
 ## Deploying (Railway)
 
 This is a real server (FastAPI doing OpenCV/Pillow image processing), not
@@ -155,6 +180,9 @@ sentences correctly name the weakest corner/edge/side. The quality-check
 tests verify the blur/resolution/contrast thresholds trigger correctly in
 both directions (a sharp, well-lit synthetic photo passes clean; a heavily
 blurred, tiny, or flat/dark one blocks) without needing real card photos.
+The identification tests mock the Anthropic client entirely (no network
+calls, no API key needed) to check the no-key/no-package/API-error fail
+-soft paths and the label-line formatting.
 
 ## Project layout
 
@@ -165,6 +193,7 @@ card-grading-bot/
       main.py            FastAPI app, /api/grade endpoint, serves the frontend
       models.py           Pydantic request/response schemas
       explanations.py      Builds the plain-English "why this grade" text per attribute
+      identification.py     Optional Claude-vision card identification (year/set/player/#)
       grading/            Per-company rule engines (pure functions, no images involved)
       vision/              OpenCV pipeline: card detection, centering, corners, edges, surface,
                            plus annotate.py for the diagnostic overlay and quality.py for the
@@ -172,7 +201,7 @@ card-grading-bot/
       rendering/           Pillow-based slab mockup generator
       fonts/                Bundled DejaVu Sans/Bold, shared by rendering/ and vision/annotate.py
     tests/                 pytest unit tests for grading rules, vision helpers, slab rendering,
-                           annotation, explanations, and photo quality checks
+                           annotation, explanations, photo quality checks, and identification
     requirements.txt
   frontend/
     index.html / style.css / app.js   Drag-and-drop upload UI, no build step

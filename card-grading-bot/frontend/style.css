@@ -318,6 +318,41 @@ button#grade-btn:not(:disabled):active {
   margin-bottom: 1.25rem;
 }
 
+/* ---------- Card identification ---------- */
+
+.card-id {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+.card-id .card-id-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.card-id .card-id-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.card-id .card-id-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+}
+
+.card-id.unidentified {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 /* ---------- Quality warnings ---------- */
 
 .quality-warnings {

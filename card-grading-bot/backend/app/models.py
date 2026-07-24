@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -34,7 +34,19 @@ class QualityWarningOut(BaseModel):
     message: str
 
 
+class CardIdentificationOut(BaseModel):
+    identified: bool
+    year: str
+    set_name: str
+    subject_name: str
+    card_number: str
+    variation: str
+    confidence: str
+    label_line: str
+
+
 class GradeResponse(BaseModel):
     measurements: MeasurementsOut
     results: List[GradeResultOut]
     quality_warnings: List[QualityWarningOut] = []
+    card_identification: Optional[CardIdentificationOut] = None

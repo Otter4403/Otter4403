@@ -176,7 +176,8 @@ def _draw_subgrade_grid(draw: ImageDraw.ImageDraw, box, entries, label_font, val
 
 def render_slab_png(card_bgr: np.ndarray, company_key: str, overall: float,
                      grade_label: str, cert_seed: bytes,
-                     subgrades: Optional[Dict[str, float]] = None) -> bytes:
+                     subgrades: Optional[Dict[str, float]] = None,
+                     card_label: Optional[str] = None) -> bytes:
     accent = _hex_to_rgb(ACCENT_COLORS.get(company_key, "#5b8cff"))
     text_on_accent = _readable_text_color(accent)
     company_name = DISPLAY_NAMES.get(company_key, company_key.upper())
@@ -241,6 +242,14 @@ def render_slab_png(card_bgr: np.ndarray, company_key: str, overall: float,
     draw.text((right_edge - label_w, MARGIN + 56), label_text, font=label_font, fill=text_on_accent)
 
     cavity_top = MARGIN + LABEL_H + 12
+    if card_label:
+        desc_font = _font("DejaVuSans-Bold.ttf", 10)
+        desc_text = _truncate_to_width(draw, card_label, desc_font, CANVAS_W - MARGIN * 2 - 24)
+        desc_w = _text_width(draw, desc_text, desc_font)
+        desc_y = MARGIN + LABEL_H + 6
+        draw.text(((CANVAS_W - desc_w) / 2, desc_y), desc_text, font=desc_font, fill=(70, 66, 60, 255))
+        cavity_top = desc_y + 18
+
     cavity_bottom = CANVAS_H - MARGIN - FOOTER_H - 8 - (GRID_H if show_grid else 0)
     cavity_box = [MARGIN + 14, cavity_top, CANVAS_W - MARGIN - 14, cavity_bottom]
     draw.rounded_rectangle(cavity_box, radius=CAVITY_RADIUS, fill=(*CAVITY_BG, 255))
