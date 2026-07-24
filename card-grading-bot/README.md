@@ -1,4 +1,4 @@
-# Card Grading Bot
+# Otter Grading
 
 An unofficial web app that estimates a trading card's grade from front/back
 photos, modeled on the publicly described condition standards used by

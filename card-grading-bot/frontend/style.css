@@ -1,27 +1,36 @@
 :root {
-  --bg: #0f1115;
-  --panel: #171a21;
-  --panel-2: #1f232c;
-  --border: #2a2f3a;
-  --text: #e8eaed;
-  --muted: #9aa1ab;
-  --accent: #5b8cff;
-  --accent-2: #37c2a1;
+  --bg: #12100e;
+  --bg-2: #17140f;
+  --panel: #1d1a15;
+  --panel-2: #262119;
+  --border: #332c22;
+  --text: #f3ede3;
+  --muted: #b3a795;
+  --accent: #2fb7a1;
+  --accent-2: #d9a441;
   --warn-bg: #2a2314;
   --warn-border: #6b5a1f;
-  --radius: 12px;
+  --radius: 14px;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+
+  --psa: #d21f3c;
+  --bgs: #d4af37;
+  --cgc: #2e6bd6;
+  --tag: #8a4fd6;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f5f6f8;
+    --bg: #faf7f0;
+    --bg-2: #f3ede1;
     --panel: #ffffff;
-    --panel-2: #f0f1f4;
-    --border: #dde0e6;
-    --text: #1a1d23;
-    --muted: #5b6270;
-    --warn-bg: #fff8e6;
+    --panel-2: #f6f1e6;
+    --border: #e4dac6;
+    --text: #241f18;
+    --muted: #6f6552;
+    --warn-bg: #fff6df;
     --warn-border: #e8d38a;
+    --shadow: 0 8px 24px rgba(90, 70, 30, 0.1);
   }
 }
 
@@ -30,28 +39,81 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 60rem 30rem at 50% -10%, rgba(47, 183, 161, 0.12), transparent),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+  background-attachment: fixed;
   color: var(--text);
 }
 
+/* ---------- Navbar ---------- */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.75rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.brand-mark {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.brand-companies {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  color: #fff;
+  opacity: 0.9;
+}
+
+.chip-psa { background: var(--psa); }
+.chip-bgs { background: var(--bgs); color: #201a06; }
+.chip-cgc { background: var(--cgc); }
+.chip-tag { background: var(--tag); }
+
+@media (max-width: 34rem) {
+  .brand-companies { display: none; }
+}
+
+/* ---------- Hero ---------- */
+
 .hero {
-  padding: 3rem 1.5rem 1.5rem;
+  padding: 2rem 1.5rem 2rem;
   text-align: center;
 }
 
 .hero h1 {
-  margin: 0 0 0.5rem;
-  font-size: 2.2rem;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.2;
+  max-width: 40rem;
+  margin-inline: auto;
 }
 
 .tagline {
   color: var(--muted);
-  max-width: 40rem;
+  max-width: 36rem;
   margin: 0 auto;
+  font-size: 1.02rem;
 }
 
 .container {
@@ -60,15 +122,29 @@ body {
   padding: 0 1.5rem 4rem;
 }
 
+/* ---------- Disclaimer ---------- */
+
 .disclaimer {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
   background: var(--warn-bg);
   border: 1px solid var(--warn-border);
   border-radius: var(--radius);
   padding: 0.9rem 1.1rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--text);
   margin-bottom: 2rem;
+  line-height: 1.5;
 }
+
+.disclaimer-icon {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--accent-2);
+}
+
+/* ---------- Uploader ---------- */
 
 .drop-grid {
   display: grid;
@@ -93,13 +169,35 @@ body {
   padding: 1.5rem;
   min-height: 12rem;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
   text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.drop-zone:hover {
+  border-color: var(--accent);
 }
 
 .drop-zone.dragover {
   border-color: var(--accent);
   background: var(--panel-2);
+  transform: scale(1.01);
+}
+
+.drop-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--muted);
+}
+
+.drop-zone.has-image .drop-icon {
+  display: none;
+}
+
+.drop-zone.has-image .drop-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .drop-label {
@@ -116,25 +214,33 @@ body {
   max-height: 9rem;
   border-radius: 8px;
   object-fit: contain;
+  box-shadow: var(--shadow);
 }
 
 button#grade-btn {
   display: block;
   width: 100%;
-  padding: 0.9rem;
+  padding: 0.95rem;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   border: none;
   border-radius: var(--radius);
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  color: #fff;
+  color: #10160f;
   cursor: pointer;
-  transition: opacity 0.15s ease, transform 0.05s ease;
+  box-shadow: var(--shadow);
+  transition: opacity 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+}
+
+button#grade-btn:not(:disabled):hover {
+  box-shadow: 0 10px 28px rgba(47, 183, 161, 0.28);
 }
 
 button#grade-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 button#grade-btn:not(:disabled):active {
@@ -151,8 +257,15 @@ button#grade-btn:not(:disabled):active {
   color: #e5624e;
 }
 
+/* ---------- Results ---------- */
+
 .results {
-  margin-top: 2.5rem;
+  margin-top: 2.75rem;
+}
+
+.results h2 {
+  text-align: center;
+  margin-bottom: 1.25rem;
 }
 
 .measurements {
@@ -171,14 +284,14 @@ button#grade-btn:not(:disabled):active {
 
 .measure-tile .label {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
 .measure-tile .value {
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 0.2rem;
 }
 
@@ -191,33 +304,36 @@ button#grade-btn:not(:disabled):active {
 .result-card {
   background: var(--panel);
   border: 1px solid var(--border);
+  border-top: 4px solid var(--card-accent, var(--accent));
   border-radius: var(--radius);
-  padding: 1.1rem 1.2rem;
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--shadow);
 }
 
 .result-card .company {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
+  letter-spacing: 0.05em;
+  color: var(--card-accent, var(--muted));
 }
 
 .result-card .grade {
-  font-size: 2.4rem;
-  font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 800;
   line-height: 1.1;
-  margin: 0.15rem 0;
+  margin: 0.2rem 0;
 }
 
 .result-card .label {
   font-weight: 600;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.8rem;
 }
 
 .result-card .sub-list {
   list-style: none;
   padding: 0;
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.8rem;
   font-size: 0.85rem;
   color: var(--muted);
 }
@@ -225,19 +341,20 @@ button#grade-btn:not(:disabled):active {
 .result-card .sub-list li {
   display: flex;
   justify-content: space-between;
-  padding: 0.15rem 0;
+  padding: 0.2rem 0;
   border-bottom: 1px dashed var(--border);
+  text-transform: capitalize;
 }
 
 .result-card .notes {
   font-size: 0.75rem;
   color: var(--muted);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 footer {
   text-align: center;
   color: var(--muted);
   font-size: 0.8rem;
-  padding: 2rem 0;
+  padding: 2rem 0 3rem;
 }

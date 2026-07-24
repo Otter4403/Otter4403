@@ -3,40 +3,67 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Card Grading Bot</title>
+  <title>Otter Grading</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%A6%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
+  <nav class="navbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🦦</span>
+      <span class="brand-name">Otter Grading</span>
+    </div>
+    <div class="brand-companies">
+      <span class="chip chip-psa">PSA</span>
+      <span class="chip chip-bgs">BGS</span>
+      <span class="chip chip-cgc">CGC</span>
+      <span class="chip chip-tag">TAG</span>
+    </div>
+  </nav>
+
   <header class="hero">
-    <h1>Card Grading Bot</h1>
-    <p class="tagline">Upload front &amp; back photos of a trading card to get an estimated grade under PSA, Beckett (BGS), CGC, and TAG-style rules.</p>
+    <h1>Know your card's grade before you submit it</h1>
+    <p class="tagline">Upload front &amp; back photos and Otter Grading estimates your card's condition under PSA, Beckett (BGS), CGC, and TAG-style grading rules &mdash; instantly.</p>
   </header>
 
   <main class="container">
     <section class="disclaimer">
-      <strong>Unofficial estimator, for reference only.</strong>
-      Not affiliated with, endorsed by, or a substitute for grading from PSA,
-      Beckett Grading Services, CGC Cards, or TAG Grading. Results are
-      approximations from photo analysis and public grading guides &mdash;
-      real submissions are graded in hand by professional graders.
+      <span class="disclaimer-icon" aria-hidden="true">ⓘ</span>
+      <div>
+        <strong>Unofficial estimator, for reference only.</strong>
+        Otter Grading is not affiliated with, endorsed by, or a substitute for
+        grading from PSA, Beckett Grading Services, CGC Cards, or TAG Grading.
+        Results are approximations from photo analysis and public grading
+        guides &mdash; real submissions are graded in hand by professional graders.
+      </div>
     </section>
 
     <section class="uploader">
       <div class="drop-grid">
         <label class="drop-zone" id="drop-front">
           <input type="file" id="front-input" accept="image/*" hidden />
-          <span class="drop-label">Front of card</span>
           <img id="front-preview" class="preview" hidden />
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="drop-label">Front of card</span>
           <span class="drop-hint">Click or drag an image</span>
         </label>
         <label class="drop-zone" id="drop-back">
           <input type="file" id="back-input" accept="image/*" hidden />
-          <span class="drop-label">Back of card</span>
           <img id="back-preview" class="preview" hidden />
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="drop-label">Back of card</span>
           <span class="drop-hint">Click or drag an image</span>
         </label>
       </div>
-      <button id="grade-btn" disabled>Grade My Card</button>
+      <button id="grade-btn" disabled>
+        <span class="btn-label">Grade My Card</span>
+      </button>
       <p id="status-msg" class="status-msg" hidden></p>
     </section>
 
@@ -48,7 +75,7 @@
   </main>
 
   <footer>
-    <p>Card Grading Bot &mdash; an independent, open-source estimation tool.</p>
+    <p><span aria-hidden="true">🦦</span> Otter Grading &mdash; an independent, open-source card grading estimator.</p>
   </footer>
 
   <script src="/static/app.js"></script>

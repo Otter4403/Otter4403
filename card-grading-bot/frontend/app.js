@@ -10,6 +10,7 @@ function setupDropZone(zoneId, inputId, previewId, key) {
     state[key] = file;
     preview.src = URL.createObjectURL(file);
     preview.hidden = false;
+    zone.classList.add("has-image");
     updateButtonState();
   };
 
@@ -59,6 +60,13 @@ function renderMeasurements(m) {
     .join("");
 }
 
+const ACCENT_VARS = {
+  PSA: "--psa",
+  "Beckett (BGS)": "--bgs",
+  CGC: "--cgc",
+  TAG: "--tag",
+};
+
 function renderResults(results) {
   const container = document.getElementById("result-cards");
   container.innerHTML = results
@@ -67,8 +75,9 @@ function renderResults(results) {
         .map(([k, v]) => `<li><span>${k.replace(/_/g, " ")}</span><span>${v}</span></li>`)
         .join("");
       const notes = r.notes.map((n) => `<div>${n}</div>`).join("");
+      const accentVar = ACCENT_VARS[r.company] || "--accent";
       return `
-        <div class="result-card">
+        <div class="result-card" style="--card-accent: var(${accentVar})">
           <div class="company">${r.company}</div>
           <div class="grade">${r.overall}</div>
           <div class="label">${r.label}</div>

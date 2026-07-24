@@ -10,7 +10,7 @@ from .vision import analyze_card, decode_image
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per image
 
-app = FastAPI(title="Card Grading Bot", description=(
+app = FastAPI(title="Otter Grading", description=(
     "Unofficial, best-effort card condition estimator inspired by the "
     "publicly described grading approaches of PSA, Beckett (BGS), CGC, "
     "and TAG. Not affiliated with any of those companies."
