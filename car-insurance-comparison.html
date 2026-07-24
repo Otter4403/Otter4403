@@ -301,6 +301,27 @@
     padding: 1px 6px;
     width: fit-content;
   }
+  .eligibility-tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    background: var(--surface-sunken);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 6px;
+    width: fit-content;
+  }
+  .quote-link {
+    margin: 14px 0 0;
+    font-size: 13px;
+  }
+  .quote-link a {
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+  }
+  .quote-link a:hover { color: var(--accent-strong); }
   .premium-block { text-align: right; }
   .premium-range { font-size: 18px; font-weight: 500; white-space: nowrap; }
   .premium-monthly { font-size: 12px; color: var(--ink-faint); white-space: nowrap; }
@@ -370,7 +391,7 @@
     <h1>Car insurance comparison ledger</h1>
     <p class="dek">Enter your details once. See a modelled, side-by-side estimate across seven major NZ insurers, live as you type.</p>
     <p class="disclaimer-banner">
-      <strong>These are modelled estimates, not real quotes.</strong> Figures are calibrated to sit within the premium ranges typically reported for NZ comprehensive car insurance (including optional extras below) — they are not sourced from, endorsed by, or affiliated with any insurer listed. No insurer publishes a live rating API, so actual underwriting can still push a real quote higher or lower than shown here. Get an actual quote from each insurer before buying.
+      <strong>These are modelled estimates, not real quotes.</strong> Figures are calibrated to sit within the premium ranges typically reported for NZ comprehensive car insurance (including optional extras below) — they are not sourced from, endorsed by, or affiliated with any insurer listed. No insurer publishes a live rating API, so actual underwriting can still push a real quote higher or lower than shown here. Click any row below for a direct link to that insurer's own quote form — that's the only way to get a binding number, and it takes your details straight to them, not through us.
     </p>
   </header>
 
@@ -563,6 +584,7 @@
     {
       key: 'aa', name: 'AA Insurance', multiplier: 1.05, offset: 40, youngAdj: 1.00,
       addonOverrides: { roadside: 0 },
+      quoteUrl: 'https://www.aainsurance.co.nz/car-insurance',
       notes: [
         'Linked to AA Membership; roadside assistance is commonly included at no extra cost.',
         'Long-established insurer with broad phone and in-person support.'
@@ -571,6 +593,7 @@
     {
       key: 'state', name: 'State', multiplier: 0.98, offset: 0, youngAdj: 1.00,
       addonOverrides: { rentalCar: 0 },
+      quoteUrl: 'https://www.state.co.nz/car-insurance',
       notes: [
         'Part of the IAG group (alongside AMI and NZI).',
         'Rental car after a claim is commonly included as standard.',
@@ -580,6 +603,7 @@
     {
       key: 'ami', name: 'AMI', multiplier: 1.00, offset: 0, youngAdj: 1.00,
       addonOverrides: { glass: 0 },
+      quoteUrl: 'https://www.ami.co.nz/car-insurance',
       notes: [
         'Also part of the IAG group; strong presence outside the main centres.',
         'Windscreen/glass claims are commonly excess-free as standard.',
@@ -589,6 +613,7 @@
     {
       key: 'tower', name: 'Tower', multiplier: 0.97, offset: 55, youngAdj: 1.08,
       addonOverrides: { ncbProtect: 0 },
+      quoteUrl: 'https://www.tower.co.nz/car-insurance/',
       notes: [
         'Runs a no-claims bonus programme; NCB protection is commonly built in.',
         'Traditional underwriting — young-driver loadings tend to run a little higher.'
@@ -597,6 +622,7 @@
     {
       key: 'cove', name: 'Cove', multiplier: 0.90, offset: -60, youngAdj: 0.94,
       addonOverrides: { roadside: 40, rentalCar: 75 },
+      quoteUrl: 'https://www.coveinsurance.co.nz/car-insurance/',
       notes: [
         'Online and app-only insurer — no phone underwriting, self-service claims.',
         'Cheaper add-on pricing via app-based partners, but fewer bundled extras.',
@@ -606,17 +632,22 @@
     {
       key: 'trademe', name: 'Trade Me Insurance', multiplier: 0.94, offset: -35, youngAdj: 0.98,
       addonOverrides: {},
+      quoteUrl: 'https://www.trademeinsurance.co.nz/car-insurance',
       notes: [
-        'Direct online insurer underwritten by Vero.',
-        'Straightforward self-service quoting; extras are priced individually.'
+        'Direct online insurer, underwritten by Tower Limited.',
+        'Straightforward self-service quoting; extras are priced individually.',
+        'Trade Me members commonly get a discount on premiums.'
       ]
     },
     {
       key: 'initio', name: 'Initio', multiplier: 0.88, offset: -80, youngAdj: 1.10,
       addonOverrides: { roadside: 75, rentalCar: 115, glass: 60 },
+      quoteUrl: 'https://initio.co.nz/car-insurance/',
+      eligibilityNote: 'Requires an existing Initio home/landlord policy',
       notes: [
-        'Budget-focused online insurer, also underwritten by Vero.',
-        'Lowest base pricing, but add-ons cost more individually — check inclusions carefully.'
+        'Backed by IAG New Zealand (via its NZI brand); budget-focused, fully online insurer.',
+        'Car insurance is only available to customers who already hold an Initio home or landlord policy — it is not sold standalone.',
+        'Lowest base pricing among those modelled here, but add-ons cost more individually.'
       ]
     }
   ];
@@ -837,6 +868,7 @@
         '<span class="name-block">' +
           '<span class="insurer-name">' + r.insurer.name + '</span>' +
           (i === 0 ? '<span class="lowest-tag">Lowest estimate</span>' : '') +
+          (r.insurer.eligibilityNote ? '<span class="eligibility-tag">' + r.insurer.eligibilityNote + '</span>' : '') +
         '</span>' +
         '<span class="premium-block">' +
           '<div class="premium-range num">' + currency.format(periodLow) + '–' + currency.format(periodHigh) + '</div>' +
@@ -866,6 +898,7 @@
       }
 
       notesHtml += '<div class="breakdown">' + breakdownRows + '</div>';
+      notesHtml += '<p class="quote-link"><a href="' + r.insurer.quoteUrl + '" target="_blank" rel="noopener noreferrer">Get a real quote from ' + r.insurer.name + ' ↗</a></p>';
       notes.innerHTML = notesHtml;
 
       details.appendChild(summary);
