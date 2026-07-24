@@ -3,11 +3,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.grading.base import SubGrades, centering_score_linear, worst_axis_pct
+from app.grading.base import SubGrades, centering_score_linear, worst_axis_pct, threshold_lookup
 from app.grading.psa import grade_psa
 from app.grading.beckett import grade_beckett
 from app.grading.cgc import grade_cgc
 from app.grading.tag import grade_tag
+from app.grading.sgc import grade_sgc
+from app.grading.hga import grade_hga
 
 
 def perfect_subgrades():
@@ -102,7 +104,73 @@ def test_tag_uses_per_corner_and_per_edge_detail_when_available():
     assert result.overall < uniform.overall
 
 
+def test_threshold_lookup_picks_first_met_threshold_and_falls_back_to_lowest():
+    table = [(9.0, "high"), (5.0, "mid"), (1.0, "low")]
+    assert threshold_lookup(9.5, table) == "high"
+    assert threshold_lookup(7.0, table) == "mid"
+    assert threshold_lookup(0.0, table) == "low"
+
+
+def test_sgc_perfect_card_grades_100_pristine():
+    result = grade_sgc(perfect_subgrades())
+    assert result.overall == 100
+    assert result.label == "Pristine"
+    assert result.scale.startswith("10-100")
+
+
+def test_sgc_weakest_link_caps_grade():
+    result = grade_sgc(flawed_subgrades())
+    # corners=6 is the worst input attribute -> should land well below the top of the scale
+    assert result.overall <= 70
+
+
+def test_hga_perfect_card_grades_ten_with_hundredth_precision():
+    result = grade_hga(perfect_subgrades())
+    assert result.overall == 10.0
+    assert result.scale.startswith("1.00")
+
+
+def test_hga_uses_per_corner_and_per_edge_detail_when_available():
+    sg = SubGrades(
+        centering_lr=(50.0, 50.0),
+        centering_tb=(50.0, 50.0),
+        corners=9.0,
+        edges=9.0,
+        surface=9.0,
+        corner_details={"top_left": 5.0, "top_right": 9.0, "bottom_left": 9.0, "bottom_right": 9.0},
+        edge_details={"top": 9.0, "bottom": 9.0, "left": 9.0, "right": 9.0},
+    )
+    result = grade_hga(sg)
+    assert result.subgrades["corner_top_left"] == 5.0
+    uniform = grade_hga(perfect_subgrades())
+    assert result.overall < uniform.overall
+
+
 def test_all_graders_stay_within_their_scale():
-    for grader in (grade_psa, grade_beckett, grade_cgc, grade_tag):
+    for grader in (grade_psa, grade_beckett, grade_cgc, grade_tag, grade_hga):
         result = grader(flawed_subgrades())
         assert 1 <= result.overall <= 10
+    sgc_result = grade_sgc(flawed_subgrades())
+    assert 10 <= sgc_result.overall <= 100
+
+
+def test_companies_diverge_on_a_near_perfect_but_not_perfect_card():
+    # A card that's a true 10 on 4 of the 5 attributes but 9.9 on corners
+    # should still show up as a perfect 10 on the coarser scales (PSA whole
+    # numbers, BGS/CGC half points, TAG tenths) while the finer-grained
+    # scales (SGC's 2-point steps near the top, HGA's hundredths) reflect
+    # the imperfection -- this divergence is the whole point of comparing
+    # multiple companies on the same card.
+    sg = SubGrades(
+        centering_lr=(50.0, 50.0),
+        centering_tb=(50.0, 50.0),
+        corners=9.9,
+        edges=10.0,
+        surface=10.0,
+    )
+    assert grade_psa(sg).overall == 10
+    assert grade_beckett(sg).overall == 10
+    assert grade_cgc(sg).overall == 10
+    assert grade_tag(sg).overall == 10.0
+    assert grade_sgc(sg).overall < 100
+    assert grade_hga(sg).overall < 10.0

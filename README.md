@@ -30,7 +30,7 @@ I'm a New Zealand-based university student specializing in Finance and Business 
 
 ## Featured Project
 
-- 🦦 [Otter Grading](./card-grading-bot) &mdash; a web app that estimates trading card grades from photos, modeling PSA, Beckett (BGS), CGC, and TAG grading standards with an OpenCV vision pipeline and a FastAPI backend.
+- 🦦 [Otter Grading](./card-grading-bot) &mdash; a web app that estimates trading card grades from photos, modeling PSA, Beckett (BGS), CGC, TAG, SGC, and HGA grading standards with an OpenCV vision pipeline and a FastAPI backend.
 
 ## Find Me On
 

@@ -17,6 +17,8 @@
   --bgs: #d4af37;
   --cgc: #2e6bd6;
   --tag: #8a4fd6;
+  --sgc: #2f8f5b;
+  --hga: #e0457b;
 }
 
 @media (prefers-color-scheme: light) {
@@ -72,7 +74,10 @@ body {
 
 .brand-companies {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.4rem;
+  max-width: 16rem;
 }
 
 .chip {
@@ -89,8 +94,10 @@ body {
 .chip-bgs { background: var(--bgs); color: #201a06; }
 .chip-cgc { background: var(--cgc); }
 .chip-tag { background: var(--tag); }
+.chip-sgc { background: var(--sgc); }
+.chip-hga { background: var(--hga); }
 
-@media (max-width: 34rem) {
+@media (max-width: 42rem) {
   .brand-companies { display: none; }
 }
 

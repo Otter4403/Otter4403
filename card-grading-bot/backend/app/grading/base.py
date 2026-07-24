@@ -1,7 +1,7 @@
 """Shared data structures and helpers used by every company's grading module."""
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 def clamp(value: float, lo: float, hi: float) -> float:
@@ -49,6 +49,16 @@ def centering_score_linear(worst_pct: float, granularity: float,
     return round_to_granularity(raw, granularity)
 
 
+def threshold_lookup(value: float, table: List[Tuple[float, Any]]) -> Any:
+    """table is a list of (minimum_value, payload) sorted descending by
+    minimum_value. Returns the payload for the first entry whose minimum is
+    at or below `value`; falls back to the lowest (last) entry otherwise."""
+    for threshold, payload in table:
+        if value >= threshold:
+            return payload
+    return table[-1][1]
+
+
 @dataclass
 class SubGrades:
     """Condition measurements feeding every company's grading logic.
@@ -92,5 +102,6 @@ class GradeResult:
 DISCLAIMER = (
     "Independent, unofficial estimate based on publicly available grading "
     "guides. Not affiliated with, endorsed by, or a substitute for grading "
-    "from PSA, Beckett Grading Services (BGS), CGC Cards, or TAG Grading."
+    "from PSA, Beckett Grading Services (BGS), CGC Cards, TAG Grading, "
+    "Sportscard Guaranty (SGC), or HGA."
 )

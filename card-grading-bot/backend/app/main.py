@@ -13,7 +13,7 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per image
 app = FastAPI(title="Otter Grading", description=(
     "Unofficial, best-effort card condition estimator inspired by the "
     "publicly described grading approaches of PSA, Beckett (BGS), CGC, "
-    "and TAG. Not affiliated with any of those companies."
+    "TAG, SGC, and HGA. Not affiliated with any of those companies."
 ))
 
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"

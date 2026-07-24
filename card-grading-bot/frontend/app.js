@@ -65,6 +65,8 @@ const ACCENT_VARS = {
   "Beckett (BGS)": "--bgs",
   CGC: "--cgc",
   TAG: "--tag",
+  SGC: "--sgc",
+  HGA: "--hga",
 };
 
 function renderResults(results) {

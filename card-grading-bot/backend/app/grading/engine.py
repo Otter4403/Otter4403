@@ -8,12 +8,16 @@ from .psa import grade_psa
 from .beckett import grade_beckett
 from .cgc import grade_cgc
 from .tag import grade_tag
+from .sgc import grade_sgc
+from .hga import grade_hga
 
 GRADERS = {
     "psa": grade_psa,
     "bgs": grade_beckett,
     "cgc": grade_cgc,
     "tag": grade_tag,
+    "sgc": grade_sgc,
+    "hga": grade_hga,
 }
 
 
