@@ -7,7 +7,8 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.rendering.slabs import (
-    ACCENT_COLORS, format_grade, fake_cert_number, render_slab_png, _truncate_to_width,
+    ACCENT_COLORS, LAYOUTS, format_grade, fake_cert_number, render_slab_png,
+    _truncate_to_width, _summarize_subgrades,
 )
 from PIL import ImageDraw, ImageFont
 
@@ -63,3 +64,40 @@ def test_truncate_to_width_never_exceeds_the_limit():
     result = _truncate_to_width(draw, long_text, font, max_width=50)
     box = draw.textbbox((0, 0), result, font=font)
     assert (box[2] - box[0]) <= 50
+
+
+def test_grid_companies_average_per_corner_and_per_edge_detail():
+    subgrades = {
+        "centering": 9.8,
+        "corner_top_left": 9.6, "corner_top_right": 10.0,
+        "corner_bottom_left": 9.8, "corner_bottom_right": 9.8,
+        "edge_top": 10.0, "edge_bottom": 10.0, "edge_left": 9.6, "edge_right": 9.8,
+        "surface": 9.9,
+    }
+    summary = dict(_summarize_subgrades(subgrades))
+    assert summary["CENT"] == 9.8
+    assert summary["CORN"] == (9.6 + 10.0 + 9.8 + 9.8) / 4
+    assert summary["EDGE"] == (10.0 + 10.0 + 9.6 + 9.8) / 4
+    assert summary["SURF"] == 9.9
+
+
+def test_summarize_subgrades_falls_back_to_plain_keys():
+    summary = dict(_summarize_subgrades({"centering": 9, "corners": 8, "edges": 7, "surface": 6}))
+    assert summary == {"CENT": 9, "CORN": 8, "EDGE": 7, "SURF": 6}
+
+
+def test_grid_layout_companies_render_with_subgrades():
+    for key in ("bgs", "tag", "hga"):
+        assert LAYOUTS[key] == "grid"
+        png_bytes = render_slab_png(
+            make_card(), key, 9.5, "Gem Mint", cert_seed=b"seed",
+            subgrades={"centering": 9.5, "corners": 9.5, "edges": 9.5, "surface": 9.5},
+        )
+        assert len(png_bytes) > 0
+
+
+def test_badge_and_banner_layout_companies_render_without_subgrades():
+    for key in ("psa", "cgc", "sgc"):
+        assert LAYOUTS[key] in ("badge", "banner")
+        png_bytes = render_slab_png(make_card(), key, 9.5, "Gem Mint", cert_seed=b"seed")
+        assert len(png_bytes) > 0

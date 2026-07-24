@@ -63,7 +63,7 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     for company_key, result in results.items():
         slab_png = render_slab_png(
             analysis.front_card, company_key, result.overall, result.label,
-            cert_seed=front_bytes,
+            cert_seed=front_bytes, subgrades=result.subgrades,
         )
         results_out.append({
             **result.to_dict(),

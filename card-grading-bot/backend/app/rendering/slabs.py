@@ -2,17 +2,20 @@
 submitted card shown inside a plastic-holder-style graphic with that
 company's estimated grade on the label.
 
-This is purely illustrative. It does not reproduce any company's actual
-holder design, logo, hologram, barcode, or other security feature -- it's a
-generic rounded-rectangle case with a colored label band and text, clearly
-marked as an unofficial estimate, meant only to make the six results easier
-to compare side by side.
+This is original artwork, not a reproduction of any company's actual
+holder. It borrows only industry-wide *conventions* that aren't anyone's
+exclusive property -- e.g. "red label" / "black label with a subgrade
+grid" / "grade shown in a bordered badge" are broad stylistic ideas used
+across the hobby, not a specific company's protected logo, wordmark, or
+label artwork. No real logos, hologram, or barcode graphics are drawn, and
+every slab is watermarked "UNOFFICIAL" with an obviously placeholder cert
+number.
 """
 
 import hashlib
 import io
 from pathlib import Path
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -23,7 +26,8 @@ FONTS_DIR = Path(__file__).resolve().parent / "fonts"
 CANVAS_W = 340
 CANVAS_H = 560
 MARGIN = 14
-LABEL_H = 100
+LABEL_H = 96
+GRID_H = 46
 FOOTER_H = 34
 OUTER_RADIUS = 20
 CAVITY_RADIUS = 10
@@ -34,6 +38,8 @@ CASE_SHADOW = (208, 206, 200)
 CAVITY_BG = (26, 26, 24)
 CARD_BORDER = (60, 60, 58)
 FOOTER_TEXT = (110, 108, 102)
+GRID_LABEL_COLOR = (120, 118, 112)
+GRID_VALUE_COLOR = (28, 26, 22)
 
 # Matches the frontend's per-company accent colors (frontend/style.css).
 ACCENT_COLORS = {
@@ -52,6 +58,20 @@ DISPLAY_NAMES = {
     "tag": "TAG",
     "sgc": "SGC",
     "hga": "HGA",
+}
+
+# Broad, unprotectable stylistic conventions per company: whether the grade
+# reads as a bordered "badge" (PSA/CGC-style) vs. a plain banner number
+# (SGC-style), and whether a 4-box subgrade strip is shown beneath the
+# card (Beckett/TAG/HGA-style, since those companies are known for
+# publishing per-attribute subgrades).
+LAYOUTS = {
+    "psa": "badge",
+    "cgc": "badge",
+    "sgc": "banner",
+    "bgs": "grid",
+    "tag": "grid",
+    "hga": "grid",
 }
 
 
@@ -103,13 +123,67 @@ def fake_cert_number(seed: bytes, key: str) -> str:
     return str(int(digest[:12], 16) % 900_000_000 + 100_000_000)
 
 
+def _summarize_subgrades(subgrades: Optional[Dict[str, float]]) -> "list[Tuple[str, Optional[float]]]":
+    """Collapse whatever subgrade keys a company produced (plain
+    corners/edges, or per-corner/per-edge detail like TAG/HGA) down to the
+    four attributes every company publicly grades on."""
+    subgrades = subgrades or {}
+
+    def avg_matching(prefix: str, fallback_key: str) -> Optional[float]:
+        matches = [v for k, v in subgrades.items() if k.startswith(prefix)]
+        if matches:
+            return sum(matches) / len(matches)
+        return subgrades.get(fallback_key)
+
+    return [
+        ("CENT", subgrades.get("centering")),
+        ("CORN", avg_matching("corner_", "corners")),
+        ("EDGE", avg_matching("edge_", "edges")),
+        ("SURF", subgrades.get("surface")),
+    ]
+
+
+def _draw_grade_badge(draw: ImageDraw.ImageDraw, x: float, y: float, grade_text: str,
+                       font: ImageFont.FreeTypeFont, border_color: Tuple[int, int, int]) -> float:
+    """A bordered white badge holding the grade number, evoking the
+    grade-in-a-box convention several companies use, without copying any
+    specific company's badge artwork. Returns the badge's width."""
+    pad_x, pad_y = 12, 8
+    text_w = _text_width(draw, grade_text, font)
+    ascent, descent = font.getmetrics()
+    text_h = ascent + descent
+    box = [x - text_w - pad_x * 2, y, x, y + text_h + pad_y * 2]
+    draw.rounded_rectangle(box, radius=8, fill=(255, 255, 255, 235), outline=(*border_color, 255), width=2)
+    draw.text((box[0] + pad_x, y + pad_y - 2), grade_text, font=font, fill=(*border_color, 255))
+    return box[2] - box[0]
+
+
+def _draw_subgrade_grid(draw: ImageDraw.ImageDraw, box, entries, label_font, value_font) -> None:
+    x0, y0, x1, y1 = box
+    n = len(entries)
+    cell_w = (x1 - x0) / n
+    for i, (key, value) in enumerate(entries):
+        cx0 = x0 + i * cell_w
+        cx1 = cx0 + cell_w
+        if i > 0:
+            draw.line([(cx0, y0 + 4), (cx0, y1 - 4)], fill=(*CASE_BORDER, 255), width=1)
+        label_w = _text_width(draw, key, label_font)
+        draw.text((cx0 + (cell_w - label_w) / 2, y0 + 4), key, font=label_font, fill=(*GRID_LABEL_COLOR, 255))
+        value_text = f"{value:g}" if value is not None else "–"
+        value_w = _text_width(draw, value_text, value_font)
+        draw.text((cx0 + (cell_w - value_w) / 2, y0 + 20), value_text, font=value_font, fill=(*GRID_VALUE_COLOR, 255))
+
+
 def render_slab_png(card_bgr: np.ndarray, company_key: str, overall: float,
-                     grade_label: str, cert_seed: bytes) -> bytes:
+                     grade_label: str, cert_seed: bytes,
+                     subgrades: Optional[Dict[str, float]] = None) -> bytes:
     accent = _hex_to_rgb(ACCENT_COLORS.get(company_key, "#5b8cff"))
     text_on_accent = _readable_text_color(accent)
     company_name = DISPLAY_NAMES.get(company_key, company_key.upper())
     grade_text = format_grade(overall)
     cert_number = fake_cert_number(cert_seed, company_key)
+    layout = LAYOUTS.get(company_key, "banner")
+    show_grid = layout == "grid"
 
     canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (255, 255, 255, 0))
     draw = ImageDraw.Draw(canvas)
@@ -124,37 +198,51 @@ def render_slab_png(card_bgr: np.ndarray, company_key: str, overall: float,
     draw.rounded_rectangle(label_box, radius=OUTER_RADIUS - 4, fill=(*accent, 255))
     draw.rectangle([MARGIN + 4, MARGIN + LABEL_H - (OUTER_RADIUS - 4), CANVAS_W - MARGIN - 4, MARGIN + LABEL_H],
                     fill=(*accent, 255))
+    # A thin inner hairline near the top of the band, evoking the
+    # double-rule look a lot of labels use, without copying any one design.
+    draw.line([(MARGIN + 4, MARGIN + 30), (CANVAS_W - MARGIN - 4, MARGIN + 30)],
+               fill=(*text_on_accent, 60), width=1)
 
-    company_font = _font("DejaVuSans-Bold.ttf", 21)
+    company_font = _font("DejaVuSans-Bold.ttf", 20)
     sub_font = _font("DejaVuSans.ttf", 11)
-    grade_font = _font("DejaVuSans-Bold.ttf", 32)
+    grade_font = _font("DejaVuSans-Bold.ttf", 30)
+    badge_font = _font("DejaVuSans-Bold.ttf", 26)
     label_font = _font("DejaVuSans.ttf", 12)
     footer_font = _font("DejaVuSans.ttf", 9)
+    grid_label_font = _font("DejaVuSans-Bold.ttf", 9)
+    grid_value_font = _font("DejaVuSans-Bold.ttf", 13)
 
     left_x = MARGIN + 16
     right_edge = CANVAS_W - MARGIN - 16
     gap = 10
 
-    # Row 1: company name (left, truncated so it never runs into the grade
-    # number) and the overall grade (right).
-    grade_w = _text_width(draw, grade_text, grade_font)
-    company_text = _truncate_to_width(draw, company_name.upper(), company_font,
-                                       right_edge - grade_w - gap - left_x)
-    draw.text((left_x, MARGIN + 14), company_text, font=company_font, fill=text_on_accent)
-    draw.text((right_edge - grade_w, MARGIN + 10), grade_text, font=grade_font, fill=text_on_accent)
+    if layout == "badge":
+        # PSA/CGC-style: company name top-left, grade in a bordered white
+        # badge top-right (evokes a "grade slot" without copying one).
+        badge_w = _draw_grade_badge(draw, right_edge, MARGIN + 8, grade_text, badge_font, accent)
+        company_text = _truncate_to_width(draw, company_name.upper(), company_font,
+                                           right_edge - badge_w - gap - left_x)
+        draw.text((left_x, MARGIN + 14), company_text, font=company_font, fill=text_on_accent)
+    else:
+        # Beckett/TAG/HGA/SGC-style: plain banner with the grade as a big
+        # number at top-right.
+        grade_w = _text_width(draw, grade_text, grade_font)
+        company_text = _truncate_to_width(draw, company_name.upper(), company_font,
+                                           right_edge - grade_w - gap - left_x)
+        draw.text((left_x, MARGIN + 14), company_text, font=company_font, fill=text_on_accent)
+        draw.text((right_edge - grade_w, MARGIN + 8), grade_text, font=grade_font, fill=text_on_accent)
 
-    # Row 2: "ESTIMATED GRADE" (left) and the grade's text label (right,
-    # truncated so a long label like a Black Label name never collides).
     sub_text = "ESTIMATED GRADE"
     sub_w = _text_width(draw, sub_text, sub_font)
-    draw.text((left_x, MARGIN + 56), sub_text, font=sub_font, fill=text_on_accent)
+    draw.text((left_x, MARGIN + 58), sub_text, font=sub_font, fill=text_on_accent)
     label_text = _truncate_to_width(draw, grade_label, label_font,
                                      right_edge - left_x - sub_w - gap)
     label_w = _text_width(draw, label_text, label_font)
-    draw.text((right_edge - label_w, MARGIN + 54), label_text, font=label_font, fill=text_on_accent)
+    draw.text((right_edge - label_w, MARGIN + 56), label_text, font=label_font, fill=text_on_accent)
 
     cavity_top = MARGIN + LABEL_H + 12
-    cavity_box = [MARGIN + 14, cavity_top, CANVAS_W - MARGIN - 14, CANVAS_H - MARGIN - FOOTER_H - 8]
+    cavity_bottom = CANVAS_H - MARGIN - FOOTER_H - 8 - (GRID_H if show_grid else 0)
+    cavity_box = [MARGIN + 14, cavity_top, CANVAS_W - MARGIN - 14, cavity_bottom]
     draw.rounded_rectangle(cavity_box, radius=CAVITY_RADIUS, fill=(*CAVITY_BG, 255))
 
     cavity_w = (cavity_box[2] - cavity_box[0]) - 20
@@ -170,6 +258,12 @@ def render_slab_png(card_bgr: np.ndarray, company_key: str, overall: float,
     paste_y = cavity_box[1] + (cavity_box[3] - cavity_box[1] - new_h) // 2
     canvas.paste(card_img, (paste_x, paste_y))
     draw.rectangle([paste_x - 1, paste_y - 1, paste_x + new_w, paste_y + new_h], outline=(*CARD_BORDER, 255), width=1)
+
+    if show_grid:
+        grid_box = [MARGIN + 14, cavity_bottom + 8, CANVAS_W - MARGIN - 14, cavity_bottom + 8 + GRID_H - 8]
+        draw.rounded_rectangle(grid_box, radius=6, outline=(*CASE_BORDER, 255), width=1, fill=(*CASE_BG, 255))
+        entries = _summarize_subgrades(subgrades)
+        _draw_subgrade_grid(draw, grid_box, entries, grid_label_font, grid_value_font)
 
     footer_y = CANVAS_H - MARGIN - FOOTER_H + 9
     draw.text((MARGIN + 16, footer_y), f"EST-{cert_number}", font=footer_font, fill=(*FOOTER_TEXT, 255))

@@ -30,17 +30,20 @@ from each company before you ever mail it in.
    docstring.
 4. Each grade also gets rendered as a stylized "slab" mockup
    (`rendering/slabs.py`, using Pillow) showing your actual submitted card
-   inside a generic plastic-holder graphic with that company's grade on the
+   inside a plastic-holder-style graphic with that company's grade on the
    label, so you can see side by side what each result would look like.
 5. The web UI shows all six slabs and grades side by side with the
    underlying subgrades and measurements, so you can compare how each
    company's rules treat the same card.
 
-The slab images are original, generic artwork -- a rounded-rectangle case
-with a colored label band and plain text. They do not reproduce any
-company's actual holder design, logo, hologram, barcode, or other security
-feature, and every slab is watermarked "UNOFFICIAL" with a fake, clearly
-non-real certification number.
+The slab images are original artwork, not reproductions of any company's
+actual holder design, logo, hologram, or barcode. What they do borrow are
+broad, industry-wide *conventions* that aren't anyone's exclusive
+property -- PSA and CGC show the grade in a bordered badge, Beckett/TAG/HGA
+are known for publishing a 4-attribute subgrade grid (centering, corners,
+edges, surface) so those get one, SGC gets a plain banner. Every slab is
+watermarked "UNOFFICIAL" with a fake, clearly non-real certification
+number.
 
 ## How each company's rules are approximated
 
