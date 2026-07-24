@@ -95,6 +95,21 @@ uvicorn app.main:app --reload
 Then open `http://127.0.0.1:8000/` in a browser, upload a front and back
 photo, and click **Grade My Card**.
 
+## Deploying (Railway)
+
+This is a real server (FastAPI doing OpenCV/Pillow image processing), not
+a static site, so it needs a host that runs a persistent Python process.
+`backend/Procfile` and `backend/railway.json` are set up for
+[Railway](https://railway.app):
+
+1. Create a new Railway service from this repo.
+2. Since the app lives in a subdirectory of this repo, set the service's
+   **root directory** to `card-grading-bot/backend` in its settings.
+3. Railway's Nixpacks builder auto-detects `requirements.txt`, installs
+   dependencies, and uses the `startCommand` in `railway.json`
+   (`uvicorn app.main:app --host 0.0.0.0 --port $PORT`) to run it.
+4. No environment variables or database are required.
+
 ## Running the tests
 
 ```bash
