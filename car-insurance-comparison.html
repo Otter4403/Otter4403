@@ -227,6 +227,8 @@
   .checkbox-field input:disabled + label { color: var(--ink-faint); }
   .hint { font-size: 11.5px; color: var(--ink-faint); margin: -3px 0 0; }
   .hint:not(:last-child) { margin-bottom: 14px; }
+  .hint:empty { display: none; }
+  .hint.notice-warn { color: var(--accent-strong); font-weight: 600; }
 
   .ledger-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .ledger-head h2 { font-size: 22px; }
@@ -296,9 +298,9 @@
   }
   .breakdown-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
   .breakdown-row.total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 7px; font-weight: 600; color: var(--ink); }
-  .breakdown-label { color: var(--ink-soft); }
+  .breakdown-label { color: var(--ink-soft); flex: 1; }
   .breakdown-row.total .breakdown-label { color: var(--ink); }
-  .breakdown-value { font-weight: 500; }
+  .breakdown-value { font-weight: 500; flex-shrink: 0; text-align: right; }
 
   @media (max-width: 560px) {
     .insurer-row summary { grid-template-columns: 20px 1fr auto; }
@@ -351,6 +353,7 @@
         <div class="field">
           <label for="driverAge">Driver's age</label>
           <input type="number" id="driverAge" min="16" max="99" value="35" inputmode="numeric" />
+          <p class="hint" id="young-driver-notice"></p>
         </div>
         <div class="field">
           <label for="yearsLicensed">Years holding a full licence</label>
@@ -376,12 +379,14 @@
               <option value="4">4</option>
               <option value="5" selected>5+</option>
             </select>
+            <p class="hint" id="ncb-cap-notice"></p>
           </div>
         </div>
         <div class="checkbox-field">
           <input type="checkbox" id="youngAdditional" />
-          <label for="youngAdditional">Any listed driver under 25</label>
+          <label for="youngAdditional">Any other listed driver under 25</label>
         </div>
+        <p class="hint" id="young-additional-notice"></p>
       </fieldset>
 
       <fieldset>
@@ -614,12 +619,16 @@
       return el && el.checked;
     }).map(function (a) { return a.key; });
 
+    var driverAge = Number(document.getElementById('driverAge').value) || 35;
+
     return {
-      driverAge: Number(document.getElementById('driverAge').value) || 35,
+      driverAge: driverAge,
       yearsLicensed: Number(document.getElementById('yearsLicensed').value) || 0,
       claims: Number(document.getElementById('claims').value),
       ncbYears: Number(document.getElementById('ncbYears').value),
-      youngAdditional: document.getElementById('youngAdditional').checked,
+      // The primary driver's own under-25 loading is already applied via age — this
+      // checkbox only covers a *second* young driver listed on the same policy.
+      youngAdditional: driverAge < 25 ? false : document.getElementById('youngAdditional').checked,
       vehicleYear: Number(document.getElementById('vehicleYear').value) || currentYear,
       vehicleValue: Math.max(500, Number(document.getElementById('vehicleValue').value) || 500),
       coverType: document.getElementById('coverType').value,
@@ -644,6 +653,40 @@
       : 'Not offered — vehicle is 3 years old or more';
   }
 
+  function updateDriverNotices(inputs) {
+    var youngExcess = youngDriverExcessFor(inputs.driverAge);
+    var ageNotice = document.getElementById('young-driver-notice');
+    if (youngExcess > 0) {
+      ageNotice.textContent = 'Under-25 loading applied automatically, plus a mandatory ~' +
+        currency.format(youngExcess) + ' young-driver excess common to NZ policies.';
+      ageNotice.classList.add('notice-warn');
+    } else {
+      ageNotice.textContent = '';
+      ageNotice.classList.remove('notice-warn');
+    }
+
+    var additionalCheckbox = document.getElementById('youngAdditional');
+    var additionalNotice = document.getElementById('young-additional-notice');
+    if (inputs.driverAge < 25) {
+      additionalCheckbox.checked = false;
+      additionalCheckbox.disabled = true;
+      additionalNotice.textContent = 'Not needed — the driver above is already under 25.';
+    } else {
+      additionalCheckbox.disabled = false;
+      additionalNotice.textContent = '';
+    }
+
+    var ncbHint = document.getElementById('ncb-cap-notice');
+    var ncbCap = Math.min(5, inputs.yearsLicensed);
+    if (inputs.ncbYears > ncbCap) {
+      ncbHint.textContent = 'Capped at ' + ncbCap + ' yr' + (ncbCap === 1 ? '' : 's') + ' — can\'t exceed time licensed.';
+      ncbHint.classList.add('notice-warn');
+    } else {
+      ncbHint.textContent = '';
+      ncbHint.classList.remove('notice-warn');
+    }
+  }
+
   function addonCostFor(insurer, addon) {
     if (insurer.addonOverrides && Object.prototype.hasOwnProperty.call(insurer.addonOverrides, addon.key)) {
       return insurer.addonOverrides[addon.key];
@@ -658,10 +701,17 @@
     return { items: items, total: total };
   }
 
+  function youngDriverExcessFor(age) {
+    if (age < 21) return 750;
+    if (age < 25) return 400;
+    return 0;
+  }
+
   function computeFactors(inputs) {
     var ageFactor = ageFactorFor(inputs.driverAge);
     var experienceFactor = inputs.yearsLicensed < 2 ? 1.30 : (inputs.yearsLicensed < 5 ? 1.10 : 1.00);
-    var effectiveNcb = Math.max(0, Math.min(5, inputs.ncbYears - inputs.claims));
+    var ncbCap = Math.min(5, inputs.yearsLicensed);
+    var effectiveNcb = Math.max(0, Math.min(ncbCap, inputs.ncbYears - inputs.claims));
     var ncbFactor = 1 - 0.06 * effectiveNcb;
     var claimsFactor = 1 + 0.25 * Math.min(inputs.claims, 3);
     var locationFactor = REGION_FACTOR[inputs.region] || 1.00;
@@ -669,7 +719,9 @@
     var vehicleAge = Math.max(0, currentYear - inputs.vehicleYear);
     var vehicleAgeFactor = vehicleAge <= 2 ? 1.15 : (vehicleAge <= 7 ? 1.00 : (vehicleAge <= 14 ? 0.90 : 0.80));
     var coverFactor = COVER_FACTOR[inputs.coverType];
-    var excessFactor = EXCESS_FACTOR[inputs.excess];
+    var mandatoryYoungExcess = youngDriverExcessFor(inputs.driverAge);
+    var youngExcessDiscount = mandatoryYoungExcess >= 750 ? 0.93 : (mandatoryYoungExcess >= 400 ? 0.97 : 1.00);
+    var excessFactor = EXCESS_FACTOR[inputs.excess] * youngExcessDiscount;
     var usageFactor = USAGE_FACTOR[inputs.usage];
     var parkingFactor = PARKING_FACTOR[inputs.parking];
     var youngAdditionalFactor = inputs.youngAdditional ? 1.20 : 1.00;
@@ -677,11 +729,12 @@
 
     return {
       ageFactor: ageFactor, experienceFactor: experienceFactor, claimsFactor: claimsFactor,
-      ncbFactor: ncbFactor, locationFactor: locationFactor, vehicleValueFactor: vehicleValueFactor,
+      ncbFactor: ncbFactor, ncbCapped: inputs.ncbYears > ncbCap, ncbCap: ncbCap,
+      locationFactor: locationFactor, vehicleValueFactor: vehicleValueFactor,
       vehicleAgeFactor: vehicleAgeFactor, coverFactor: coverFactor, excessFactor: excessFactor,
       usageFactor: usageFactor, parkingFactor: parkingFactor,
       youngAdditionalFactor: youngAdditionalFactor, multiPolicyFactor: multiPolicyFactor,
-      isYoungDriver: ageFactor > 1.2
+      isYoungDriver: ageFactor > 1.2, mandatoryYoungExcess: mandatoryYoungExcess
     };
   }
 
@@ -697,6 +750,7 @@
   function render() {
     var inputs = readInputs();
     updateNewForOldAvailability(inputs);
+    updateDriverNotices(inputs);
     inputs = readInputs();
     var f = computeFactors(inputs);
     var combined = combinedOf(f);
@@ -754,6 +808,9 @@
         breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">Add-ons selected</span><span class="breakdown-value">None</span></div>';
       }
       breakdownRows += '<div class="breakdown-row total"><span class="breakdown-label">Estimated annual total</span><span class="breakdown-value num">' + currency.format(r.mid) + '</span></div>';
+      if (f.mandatoryYoungExcess > 0) {
+        breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">+ Mandatory young-driver excess (payable only if at fault, on top of the chosen excess)</span><span class="breakdown-value num">' + currency.format(f.mandatoryYoungExcess) + '</span></div>';
+      }
 
       notesHtml += '<div class="breakdown">' + breakdownRows + '</div>';
       notes.innerHTML = notesHtml;
