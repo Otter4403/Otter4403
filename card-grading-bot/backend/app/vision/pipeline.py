@@ -25,6 +25,7 @@ class AnalysisResult:
     # Raw per-side measurements, kept around so the diagnostic overlay can
     # show exactly what was measured on each photo.
     front_centering: CenteringResult
+    back_centering: CenteringResult
     front_corners: CornerResult
     back_corners: CornerResult
     front_edges: EdgeResult
@@ -44,6 +45,7 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
     )
 
     centering = measure_centering(front)
+    back_centering = measure_centering(back)
 
     corners_front = measure_corners(front)
     corners_back = measure_corners(back)
@@ -70,13 +72,16 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
     surface_score = min(surface_front.score, surface_back.score)
 
     notes = [
-        "Centering measured from the front image only, per standard grading practice.",
+        "Centering is measured on both the front and back photos, since every "
+        "company's published standard grades both (back is usually more lenient).",
         "Corners and edges are a 60/40 front/back weighted blend; surface uses the worse of the two sides.",
     ]
 
     subgrades = SubGrades(
         centering_lr=centering.lr,
         centering_tb=centering.tb,
+        back_centering_lr=back_centering.lr,
+        back_centering_tb=back_centering.tb,
         corners=corners_score,
         edges=edges_score,
         surface=surface_score,
@@ -86,7 +91,7 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
     )
     return AnalysisResult(
         subgrades=subgrades, front_card=front, back_card=back,
-        front_centering=centering,
+        front_centering=centering, back_centering=back_centering,
         front_corners=corners_front, back_corners=corners_back,
         front_edges=edges_front, back_edges=edges_back,
         front_surface=surface_front, back_surface=surface_back,

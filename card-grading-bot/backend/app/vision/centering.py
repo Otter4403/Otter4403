@@ -13,6 +13,7 @@ import cv2
 import numpy as np
 
 SEARCH_FRACTION = 0.25  # only look for the border line within the outer 25% of each side
+EDGE_EXCLUSION_FRACTION = 0.012  # ignore this fraction of pixels right at the true edge
 
 
 @dataclass
@@ -25,17 +26,25 @@ class CenteringResult:
     bottom_px: int
 
 
-def _find_border_offset(profile: np.ndarray, search_px: int) -> int:
+def _find_border_offset(profile: np.ndarray, search_px: int, exclude_px: int = 0) -> int:
     """Return the index within the first `search_px` samples of `profile`
-    with the strongest gradient magnitude -- i.e. the likely border line."""
+    with the strongest gradient magnitude -- i.e. the likely border line.
+
+    The first `exclude_px` samples are skipped entirely: the perspective
+    correction step can leave a sliver of background bleeding in right at
+    the card's true edge (from an imperfect corner fit), which would
+    otherwise create a spurious, dominant gradient at offset ~0-2 and make
+    every card look perfectly centered regardless of its real border.
+    """
     search_px = max(1, min(search_px, len(profile) - 1))
-    window = profile[:search_px]
+    exclude_px = max(0, min(exclude_px, search_px - 2)) if search_px > 2 else 0
+    window = profile[exclude_px:search_px]
     if len(window) < 2:
-        return 0
+        return exclude_px
     grad = np.abs(np.diff(window))
     if grad.size == 0 or grad.max() <= 0:
-        return search_px // 2
-    return int(np.argmax(grad)) + 1
+        return exclude_px + search_px // 2
+    return exclude_px + int(np.argmax(grad)) + 1
 
 
 def measure_centering(card_img: np.ndarray) -> CenteringResult:
@@ -47,11 +56,13 @@ def measure_centering(card_img: np.ndarray) -> CenteringResult:
 
     search_w = int(w * SEARCH_FRACTION)
     search_h = int(h * SEARCH_FRACTION)
+    exclude_w = max(1, int(w * EDGE_EXCLUSION_FRACTION))
+    exclude_h = max(1, int(h * EDGE_EXCLUSION_FRACTION))
 
-    left_px = _find_border_offset(col_profile, search_w)
-    right_px = _find_border_offset(col_profile[::-1], search_w)
-    top_px = _find_border_offset(row_profile, search_h)
-    bottom_px = _find_border_offset(row_profile[::-1], search_h)
+    left_px = _find_border_offset(col_profile, search_w, exclude_w)
+    right_px = _find_border_offset(col_profile[::-1], search_w, exclude_w)
+    top_px = _find_border_offset(row_profile, search_h, exclude_h)
+    bottom_px = _find_border_offset(row_profile[::-1], search_h, exclude_h)
 
     lr = _to_pct(left_px, right_px)
     tb = _to_pct(top_px, bottom_px)

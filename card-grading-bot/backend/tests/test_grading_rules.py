@@ -3,7 +3,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from app.grading.base import SubGrades, centering_score_linear, worst_axis_pct, threshold_lookup
+from app.grading.base import (
+    SubGrades, centering_score_linear, piecewise_centering_score, worst_axis_pct, threshold_lookup,
+)
 from app.grading.psa import grade_psa
 from app.grading.beckett import grade_beckett
 from app.grading.cgc import grade_cgc
@@ -152,6 +154,69 @@ def test_all_graders_stay_within_their_scale():
         assert 1 <= result.overall <= 10
     sgc_result = grade_sgc(flawed_subgrades())
     assert 10 <= sgc_result.overall <= 100
+
+
+def test_piecewise_centering_score_interpolates_between_anchors():
+    table = [(50.0, 10.0), (60.0, 8.0), (100.0, 0.0)]
+    assert piecewise_centering_score(50.0, table, granularity=0.1) == 10.0
+    assert piecewise_centering_score(55.0, table, granularity=0.1) == 9.0  # midpoint of 50->60
+    assert piecewise_centering_score(60.0, table, granularity=0.1) == 8.0
+    # clamps outside the published range instead of extrapolating past it
+    assert piecewise_centering_score(40.0, table, granularity=0.1) == 10.0
+    assert piecewise_centering_score(150.0, table, granularity=0.1) == 0.0
+
+
+def test_psa_centering_matches_published_breakpoints():
+    def sg_with_front(worst_lr):
+        return SubGrades(centering_lr=(worst_lr, 100 - worst_lr), centering_tb=(50.0, 50.0),
+                          corners=10.0, edges=10.0, surface=10.0)
+
+    assert grade_psa(sg_with_front(55.0)).subgrades["centering"] == 10
+    assert grade_psa(sg_with_front(60.0)).subgrades["centering"] == 9
+    assert grade_psa(sg_with_front(65.0)).subgrades["centering"] == 8
+    assert grade_psa(sg_with_front(70.0)).subgrades["centering"] == 7
+
+
+def test_psa_bad_back_centering_caps_grade_even_with_perfect_front():
+    sg = SubGrades(
+        centering_lr=(50.0, 50.0), centering_tb=(50.0, 50.0),
+        back_centering_lr=(95.0, 5.0), back_centering_tb=(50.0, 50.0),
+        corners=10.0, edges=10.0, surface=10.0,
+    )
+    result = grade_psa(sg)
+    assert result.overall < 10
+
+
+def test_sgc_centering_matches_published_breakpoints():
+    def sg_with_front(worst_lr):
+        return SubGrades(centering_lr=(worst_lr, 100 - worst_lr), centering_tb=(50.0, 50.0),
+                          corners=10.0, edges=10.0, surface=10.0)
+
+    assert grade_sgc(sg_with_front(50.0)).overall == 100
+    assert grade_sgc(sg_with_front(55.0)).overall == 98
+    assert grade_sgc(sg_with_front(60.0)).overall == 96
+
+
+def test_tag_has_no_9point5_and_uses_pristine_gem_mint_qualifiers():
+    from app.grading.tag import _tag_score_to_grade
+    assert _tag_score_to_grade(989) == (10.0, "Gem Mint")
+    assert _tag_score_to_grade(990) == (10.0, "Pristine")
+    assert _tag_score_to_grade(950) == (10.0, "Gem Mint")
+    assert _tag_score_to_grade(949) == (9.0, "Mint")
+    # confirm no value of tag_score can ever produce a 9.5 grade
+    for score in range(100, 1001):
+        grade, _ = _tag_score_to_grade(score)
+        assert grade != 9.5
+
+
+def test_tag_bad_back_centering_caps_grade_even_with_perfect_front():
+    sg = SubGrades(
+        centering_lr=(50.0, 50.0), centering_tb=(50.0, 50.0),
+        back_centering_lr=(95.0, 5.0), back_centering_tb=(50.0, 50.0),
+        corners=10.0, edges=10.0, surface=10.0,
+    )
+    result = grade_tag(sg)
+    assert result.overall < 10.0
 
 
 def test_companies_diverge_on_a_near_perfect_but_not_perfect_card():

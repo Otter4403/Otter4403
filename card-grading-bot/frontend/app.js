@@ -46,8 +46,10 @@ function showStatus(message, isError) {
 function renderMeasurements(m) {
   const container = document.getElementById("measurements");
   const tiles = [
-    ["Centering L/R", `${m.centering_lr[0]} / ${m.centering_lr[1]}`],
-    ["Centering T/B", `${m.centering_tb[0]} / ${m.centering_tb[1]}`],
+    ["Front Centering L/R", `${m.centering_lr[0]} / ${m.centering_lr[1]}`],
+    ["Front Centering T/B", `${m.centering_tb[0]} / ${m.centering_tb[1]}`],
+    ["Back Centering L/R", `${m.back_centering_lr[0]} / ${m.back_centering_lr[1]}`],
+    ["Back Centering T/B", `${m.back_centering_tb[0]} / ${m.back_centering_tb[1]}`],
     ["Corners", m.corners.toFixed(2)],
     ["Edges", m.edges.toFixed(2)],
     ["Surface", m.surface.toFixed(2)],

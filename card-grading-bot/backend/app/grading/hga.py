@@ -3,14 +3,18 @@
 HGA markets itself, like TAG, around camera/AI-based measurement rather
 than a human grader's eye, and reports grades to two decimal places (e.g.
 9.75, 8.83) rather than whole or half points -- the finest granularity of
-any company modeled here. We mirror TAG's structure (a weighted composite
-across centering, all 4 corners, all 4 edges, and surface) but at hundredth
--of-a-point precision and with our own weighting, leaning slightly more on
+any company modeled here. Unlike PSA/BGS/CGC/SGC/TAG, we could not find any
+specific published centering-percentage breakpoints from HGA, so its
+centering curve stays the generic linear model (50/50=10 down to 95/5=1)
+used as a fallback elsewhere in this project, applied to both front and
+back photos. We mirror TAG's structure (a weighted composite across
+centering, all 4 corners, all 4 edges, and surface) but at hundredth-of-a
+-point precision and with our own weighting, leaning slightly more on
 surface, which HGA's marketing emphasizes (raking-light surface imaging).
 """
 
 from .base import (
-    GradeResult, SubGrades, clamp, centering_score_linear, worst_axis_pct,
+    GradeResult, SubGrades, centering_score_linear, clamp, worst_axis_pct,
     round_to_granularity, DISCLAIMER,
 )
 
@@ -46,8 +50,11 @@ def _label(overall: float) -> str:
 
 
 def grade_hga(sg: SubGrades) -> GradeResult:
-    worst_pct = max(worst_axis_pct(sg.centering_lr), worst_axis_pct(sg.centering_tb))
-    centering = centering_score_linear(worst_pct, granularity=GRANULARITY)
+    front_worst = max(worst_axis_pct(sg.centering_lr), worst_axis_pct(sg.centering_tb))
+    back_worst = max(worst_axis_pct(sg.back_centering_lr), worst_axis_pct(sg.back_centering_tb))
+    front_centering = centering_score_linear(front_worst, granularity=GRANULARITY)
+    back_centering = centering_score_linear(back_worst, granularity=GRANULARITY)
+    centering = min(front_centering, back_centering)
 
     corner_details = sg.corner_details or {k: sg.corners for k in CORNER_KEYS}
     edge_details = sg.edge_details or {k: sg.edges for k in EDGE_KEYS}
@@ -78,8 +85,10 @@ def grade_hga(sg: SubGrades) -> GradeResult:
     }
 
     notes = [
-        f"Worst-side centering measured at {worst_pct:.1f}/{100 - worst_pct:.1f} "
-        f"-> centering subgrade {centering:.2f}.",
+        f"Front centering measured at {front_worst:.1f}/{100 - front_worst:.1f} -> subgrade "
+        f"{front_centering:.2f}; back at {back_worst:.1f}/{100 - back_worst:.1f} -> subgrade "
+        f"{back_centering:.2f} (no published HGA centering breakpoints were found, so this "
+        f"uses our generic 50/50=10 to 95/5=1 fallback curve for both sides).",
         "Overall = weighted composite of centering, 4 corner subgrades, 4 edge "
         "subgrades, and surface, reported to the hundredth of a point -- "
         "mirroring HGA's published imaging-based measurement approach.",

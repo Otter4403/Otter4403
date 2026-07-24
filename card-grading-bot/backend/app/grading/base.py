@@ -49,6 +49,31 @@ def centering_score_linear(worst_pct: float, granularity: float,
     return round_to_granularity(raw, granularity)
 
 
+def piecewise_centering_score(worst_pct: float, breakpoints: List[Tuple[float, float]],
+                                granularity: float, min_score: float = 1.0) -> float:
+    """Map a worst-side centering percentage to a score using anchor points
+    grounded in a company's actual published centering requirements, e.g.
+    PSA's public grading descriptions (55/45 -> 10, 60/40 -> 9, 65/35 -> 8,
+    ...). `breakpoints` is a list of (worst_side_pct, score) pairs; we
+    linearly interpolate between the two nearest published anchors and
+    clamp to the end anchors outside the published range. The anchor
+    points themselves come from public grading-standard descriptions; the
+    linear interpolation between them is our own approximation for values
+    a company doesn't explicitly publish a breakpoint for."""
+    pts = sorted(breakpoints, key=lambda p: p[0])
+    if not pts:
+        return min_score
+    if worst_pct <= pts[0][0]:
+        return round_to_granularity(pts[0][1], granularity)
+    if worst_pct >= pts[-1][0]:
+        return round_to_granularity(pts[-1][1], granularity)
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        if x0 <= worst_pct <= x1:
+            raw = y0 if x1 == x0 else y0 + (worst_pct - x0) / (x1 - x0) * (y1 - y0)
+            return round_to_granularity(raw, granularity)
+    return round_to_granularity(pts[-1][1], granularity)
+
+
 def threshold_lookup(value: float, table: List[Tuple[float, Any]]) -> Any:
     """table is a list of (minimum_value, payload) sorted descending by
     minimum_value. Returns the payload for the first entry whose minimum is
@@ -63,10 +88,13 @@ def threshold_lookup(value: float, table: List[Tuple[float, Any]]) -> Any:
 class SubGrades:
     """Condition measurements feeding every company's grading logic.
 
-    centering_lr / centering_tb are (side_a, side_b) percentage splits, e.g.
-    (58.0, 42.0) for a 58/42 left/right centering. corners/edges/surface are
-    generic 0-10 condition scores (10 = flawless) produced by the vision
-    pipeline (or entered manually).
+    centering_lr / centering_tb are the FRONT card's (side_a, side_b)
+    percentage splits, e.g. (58.0, 42.0) for a 58/42 left/right centering.
+    back_centering_lr / back_centering_tb are the same, measured on the
+    back -- every company's published standard grades back centering too,
+    almost always with a looser tolerance than the front. corners/edges/
+    surface are generic 0-10 condition scores (10 = flawless) produced by
+    the vision pipeline (or entered manually).
     """
 
     centering_lr: Tuple[float, float]
@@ -74,6 +102,8 @@ class SubGrades:
     corners: float
     edges: float
     surface: float
+    back_centering_lr: Tuple[float, float] = (50.0, 50.0)
+    back_centering_tb: Tuple[float, float] = (50.0, 50.0)
     corner_details: Optional[Dict[str, float]] = None
     edge_details: Optional[Dict[str, float]] = None
     notes: List[str] = field(default_factory=list)

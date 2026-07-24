@@ -3,14 +3,22 @@
 CGC grades on a 1-10 scale in half-point increments and describes its
 process as a holistic evaluation of centering, corners, edges, and surface
 plus overall eye appeal, performed by a review committee rather than a
-single grader. CGC has begun showing subgrades on some labels. We model it
-similarly to Beckett (weighted average of the four attributes) but with an
-evenly-balanced weighting and a slightly more forgiving gap allowance,
-reflecting CGC's own description of weighing eye appeal holistically rather
-than being ruled by a single weakest attribute.
+single grader. CGC's published standard confirms a centering subgrade of 10
+needs about 55/45 front and 60/40 back, a 9.5 needs about 60/40 front, and a
+9 needs about 65/35 front; reverse centering is described as generally not
+exceeding about 75/25 for good grades. CGC doesn't publish anchors for
+every tier or the exact combination formula, so the rest of each curve and
+the weighted-average-with-a-cap logic are our own approximation, modeled
+similarly to Beckett but with an evenly-balanced weighting and a slightly
+more forgiving gap allowance, reflecting CGC's own description of weighing
+eye appeal holistically rather than being ruled by a single weakest
+attribute.
 """
 
-from .base import GradeResult, SubGrades, clamp, centering_score_linear, worst_axis_pct, round_to_granularity, DISCLAIMER
+from .base import (
+    GradeResult, SubGrades, clamp, piecewise_centering_score, worst_axis_pct,
+    round_to_granularity, DISCLAIMER,
+)
 
 GRANULARITY = 0.5
 
@@ -22,6 +30,15 @@ WEIGHTS = {
 }
 
 MAX_GAP_ABOVE_MIN = 1.5
+
+# 55/45->10, 60/40->9.5, and 65/35->9 (front) are CGC's confirmed published
+# anchors; everything beyond that is our own extrapolation.
+FRONT_CENTERING_BREAKPOINTS = [
+    (55.0, 10), (60.0, 9.5), (65.0, 9), (70.0, 8), (80.0, 6.5), (90.0, 4), (100.0, 1),
+]
+BACK_CENTERING_BREAKPOINTS = [
+    (60.0, 10), (75.0, 8), (90.0, 4), (100.0, 1),
+]
 
 
 def _label(overall: float) -> str:
@@ -49,8 +66,13 @@ def _label(overall: float) -> str:
 
 
 def grade_cgc(sg: SubGrades) -> GradeResult:
-    worst_pct = max(worst_axis_pct(sg.centering_lr), worst_axis_pct(sg.centering_tb))
-    centering = centering_score_linear(worst_pct, granularity=GRANULARITY)
+    front_worst = max(worst_axis_pct(sg.centering_lr), worst_axis_pct(sg.centering_tb))
+    back_worst = max(worst_axis_pct(sg.back_centering_lr), worst_axis_pct(sg.back_centering_tb))
+
+    front_centering = piecewise_centering_score(front_worst, FRONT_CENTERING_BREAKPOINTS, granularity=GRANULARITY)
+    back_centering = piecewise_centering_score(back_worst, BACK_CENTERING_BREAKPOINTS, granularity=GRANULARITY)
+    centering = min(front_centering, back_centering)
+
     corners = round_to_granularity(clamp(sg.corners, 1, 10), GRANULARITY)
     edges = round_to_granularity(clamp(sg.edges, 1, 10), GRANULARITY)
     surface = round_to_granularity(clamp(sg.surface, 1, 10), GRANULARITY)
@@ -68,8 +90,9 @@ def grade_cgc(sg: SubGrades) -> GradeResult:
         overall = 10.0
 
     notes = [
-        f"Worst-side centering measured at {worst_pct:.1f}/{100 - worst_pct:.1f} "
-        f"-> centering subgrade {centering}.",
+        f"Front centering measured at {front_worst:.1f}/{100 - front_worst:.1f} -> subgrade "
+        f"{front_centering}; back centering at {back_worst:.1f}/{100 - back_worst:.1f} -> subgrade "
+        f"{back_centering} (a 10 needs ~55/45 front and ~60/40 back per CGC's published standard).",
         f"Overall = evenly-weighted average of subgrades, capped at (lowest subgrade + {MAX_GAP_ABOVE_MIN}), "
         "approximating CGC's holistic eye-appeal review.",
         DISCLAIMER,

@@ -31,3 +31,25 @@ def test_measure_centering_detects_off_center_card():
     result = measure_centering(card)
     l, r = result.lr
     assert l > r
+
+
+def test_measure_centering_ignores_a_thin_edge_artifact():
+    # Simulates a perspective-correction artifact: a 1-2px sliver of a very
+    # different color bleeding in right at the true edge (e.g. background
+    # from an imperfect corner fit), which used to create a spurious,
+    # dominant gradient at offset ~0 and make every card read as 50/50
+    # regardless of its actual border.
+    card = make_card_with_border(left=42, right=7, top=32, bottom=7,
+                                  width=353, height=503)
+    card[:, 0:2] = 5      # thin dark sliver on the left edge
+    card[:, -2:] = 5      # and the right edge
+    card[0:2, :] = 5      # and top/bottom
+    card[-2:, :] = 5
+    result = measure_centering(card)
+    l, r = result.lr
+    t, b = result.tb
+    # should still find the real border deep at ~42/7 and ~32/7, not the
+    # artifact at ~0-2, so the measured split should be meaningfully
+    # off-center rather than reading as ~50/50
+    assert l > 70
+    assert t > 70

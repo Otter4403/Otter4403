@@ -38,21 +38,30 @@ def _defect_phrase(score: float, kind: str) -> str:
 
 
 def _explain_centering(subgrades: SubGrades) -> str:
-    lr_worst = worst_axis_pct(subgrades.centering_lr)
-    tb_worst = worst_axis_pct(subgrades.centering_tb)
-    lr_text = f"{subgrades.centering_lr[0]:.1f}/{subgrades.centering_lr[1]:.1f}"
-    tb_text = f"{subgrades.centering_tb[0]:.1f}/{subgrades.centering_tb[1]:.1f}"
+    front_lr_worst = worst_axis_pct(subgrades.centering_lr)
+    front_tb_worst = worst_axis_pct(subgrades.centering_tb)
+    back_lr_worst = worst_axis_pct(subgrades.back_centering_lr)
+    back_tb_worst = worst_axis_pct(subgrades.back_centering_tb)
 
-    if lr_worst <= 51 and tb_worst <= 51:
-        return (f"Measured at {lr_text} left-right and {tb_text} top-bottom -- "
-                f"essentially a perfect 50/50 split on both axes, so centering isn't costing this card anything.")
+    front_text = (f"{subgrades.centering_lr[0]:.1f}/{subgrades.centering_lr[1]:.1f} left-right and "
+                  f"{subgrades.centering_tb[0]:.1f}/{subgrades.centering_tb[1]:.1f} top-bottom")
+    back_text = (f"{subgrades.back_centering_lr[0]:.1f}/{subgrades.back_centering_lr[1]:.1f} left-right and "
+                 f"{subgrades.back_centering_tb[0]:.1f}/{subgrades.back_centering_tb[1]:.1f} top-bottom")
 
-    worse_axis = "left-right" if lr_worst >= tb_worst else "top-bottom"
-    worse_pct = max(lr_worst, tb_worst)
-    return (f"Measured at {lr_text} left-right and {tb_text} top-bottom. A 50/50 split on "
-            f"both axes scores a perfect 10 everywhere; every company here docks points as the "
-            f"split moves away from 50/50, and the {worse_axis} split ({worse_pct:.1f}/"
-            f"{100 - worse_pct:.1f}) is this card's limiting axis.")
+    front_worst = max(front_lr_worst, front_tb_worst)
+    back_worst = max(back_lr_worst, back_tb_worst)
+
+    if front_worst <= 51 and back_worst <= 51:
+        return (f"Front measured at {front_text}; back at {back_text} -- essentially a perfect 50/50 "
+                f"split on both photos, so centering isn't costing this card anything.")
+
+    limiting_side = "front" if front_worst >= back_worst else "back"
+    limiting_pct = max(front_worst, back_worst)
+    return (f"Front measured at {front_text}; back at {back_text}. A 50/50 split scores a "
+            f"perfect 10; every company here docks points as either side moves away from that, and "
+            f"the {limiting_side} photo ({limiting_pct:.1f}/{100 - limiting_pct:.1f} on its worst axis) "
+            f"is this card's limiting measurement. Back centering is graded more leniently than front "
+            f"by every company here, so it usually isn't the limiting factor unless it's notably off.")
 
 
 def _explain_corners(subgrades: SubGrades) -> str:

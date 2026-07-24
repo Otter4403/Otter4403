@@ -66,11 +66,14 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     )
     annotated_back = render_annotated_photo(
         analysis.back_card, analysis.back_corners, analysis.back_edges, analysis.back_surface,
+        centering=analysis.back_centering,
     )
 
     measurements = MeasurementsOut(
         centering_lr=list(subgrades.centering_lr),
         centering_tb=list(subgrades.centering_tb),
+        back_centering_lr=list(subgrades.back_centering_lr),
+        back_centering_tb=list(subgrades.back_centering_tb),
         corners=round(subgrades.corners, 2),
         edges=round(subgrades.edges, 2),
         surface=round(subgrades.surface, 2),

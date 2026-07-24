@@ -65,6 +65,15 @@ def test_weak_edge_is_named():
     assert "6.5" in result["edges"]
 
 
+def test_back_centering_named_as_limiting_when_front_is_perfect():
+    sg = perfect_subgrades()
+    sg.back_centering_lr = (80.0, 20.0)
+    sg.back_centering_tb = (51.0, 49.0)
+    result = build_explanations(sg, _surface(0.0), _surface(0.0))
+    assert "back" in result["centering"]
+    assert "80.0/20.0" in result["centering"]
+
+
 def test_surface_explanation_names_the_worse_side():
     sg = perfect_subgrades()
     result = build_explanations(sg, _surface(0.05), _surface(0.01))

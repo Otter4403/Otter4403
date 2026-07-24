@@ -16,6 +16,8 @@ class GradeResultOut(BaseModel):
 class MeasurementsOut(BaseModel):
     centering_lr: List[float]
     centering_tb: List[float]
+    back_centering_lr: List[float]
+    back_centering_tb: List[float]
     corners: float
     edges: float
     surface: float
