@@ -230,9 +230,37 @@
   .hint:empty { display: none; }
   .hint.notice-warn { color: var(--accent-strong); font-weight: 600; }
 
-  .ledger-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ledger-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .ledger-head h2 { font-size: 22px; }
-  .ledger-sub { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+  .ledger-sub { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-faint); }
+
+  .segmented {
+    display: inline-flex;
+    background: var(--surface-sunken);
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    padding: 3px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .segmented-btn {
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--ink-soft);
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    padding: 7px 13px;
+    cursor: pointer;
+  }
+  .segmented-btn:hover { color: var(--ink); }
+  .segmented-btn.is-active {
+    background: var(--surface);
+    color: var(--accent-strong);
+    box-shadow: var(--shadow);
+  }
 
   .insurer-list { list-style: none; margin: 0 0 28px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 
@@ -493,8 +521,15 @@
 
     <section aria-live="polite">
       <div class="ledger-head">
-        <h2>Estimated annual premiums</h2>
-        <p class="ledger-sub">Lowest to highest · click a row for notes</p>
+        <div>
+          <h2>Estimated <span id="period-word">annual</span> premiums</h2>
+          <p class="ledger-sub">Lowest to highest · click a row for notes</p>
+        </div>
+        <div class="segmented" id="period-toggle" role="radiogroup" aria-label="Show cost per">
+          <button type="button" class="segmented-btn" data-period="weekly" role="radio" aria-checked="false">Weekly</button>
+          <button type="button" class="segmented-btn" data-period="monthly" role="radio" aria-checked="false">Monthly</button>
+          <button type="button" class="segmented-btn is-active" data-period="yearly" role="radio" aria-checked="true">Yearly</button>
+        </div>
       </div>
       <ol class="insurer-list" id="insurer-list"></ol>
 
@@ -605,6 +640,13 @@
 
   var currency = new Intl.NumberFormat('en-NZ', { style: 'currency', currency: 'NZD', maximumFractionDigits: 0 });
   var currentYear = new Date().getFullYear();
+
+  var PERIODS = {
+    weekly: { divisor: 52, word: 'weekly', round: 1, suffix: '/wk' },
+    monthly: { divisor: 12, word: 'monthly', round: 1, suffix: '/mo' },
+    yearly: { divisor: 1, word: 'annual', round: 10, suffix: '/yr' }
+  };
+  var currentPeriod = 'yearly';
 
   function ageFactorFor(age) {
     for (var i = 0; i < AGE_BRACKETS.length; i++) {
@@ -756,6 +798,8 @@
     var combined = combinedOf(f);
     var corePremium = BASE_PREMIUM * combined;
 
+    var period = PERIODS[currentPeriod];
+
     var results = INSURERS.map(function (insurer) {
       var insurerAdjust = insurer.multiplier * (f.isYoungDriver ? insurer.youngAdj : 1.0);
       var core = Math.max(150, corePremium * insurerAdjust + insurer.offset);
@@ -781,6 +825,12 @@
       details.className = 'insurer-row';
       details.dataset.lowest = (i === 0).toString();
 
+      var periodLow = roundTo(r.low / period.divisor, period.round);
+      var periodHigh = roundTo(r.high / period.divisor, period.round);
+      var secondaryLine = currentPeriod === 'yearly'
+        ? '~' + currency.format(r.monthly) + '/mo equivalent'
+        : currency.format(r.mid) + '/yr billed total';
+
       var summary = document.createElement('summary');
       summary.innerHTML =
         '<span class="rank num">' + (i + 1) + '</span>' +
@@ -789,8 +839,8 @@
           (i === 0 ? '<span class="lowest-tag">Lowest estimate</span>' : '') +
         '</span>' +
         '<span class="premium-block">' +
-          '<div class="premium-range num">' + currency.format(r.low) + '–' + currency.format(r.high) + '</div>' +
-          '<div class="premium-monthly num">~' + currency.format(r.monthly) + '/mo equivalent</div>' +
+          '<div class="premium-range num">' + currency.format(periodLow) + '–' + currency.format(periodHigh) + '</div>' +
+          '<div class="premium-monthly num">' + secondaryLine + '</div>' +
         '</span>' +
         '<span class="chevron" aria-hidden="true">&#8250;</span>';
 
@@ -808,6 +858,9 @@
         breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">Add-ons selected</span><span class="breakdown-value">None</span></div>';
       }
       breakdownRows += '<div class="breakdown-row total"><span class="breakdown-label">Estimated annual total</span><span class="breakdown-value num">' + currency.format(r.mid) + '</span></div>';
+      if (currentPeriod !== 'yearly') {
+        breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">≈ per ' + (currentPeriod === 'weekly' ? 'week' : 'month') + '</span><span class="breakdown-value num">' + currency.format(r.mid / period.divisor) + '</span></div>';
+      }
       if (f.mandatoryYoungExcess > 0) {
         breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">+ Mandatory young-driver excess (payable only if at fault, on top of the chosen excess)</span><span class="breakdown-value num">' + currency.format(f.mandatoryYoungExcess) + '</span></div>';
       }
@@ -851,6 +904,19 @@
       list.appendChild(li);
     });
   }
+
+  document.querySelectorAll('.segmented-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      currentPeriod = btn.dataset.period;
+      document.querySelectorAll('.segmented-btn').forEach(function (b) {
+        var active = b === btn;
+        b.classList.toggle('is-active', active);
+        b.setAttribute('aria-checked', active.toString());
+      });
+      document.getElementById('period-word').textContent = PERIODS[currentPeriod].word;
+      render();
+    });
+  });
 
   document.getElementById('quote-form').addEventListener('input', render);
   document.getElementById('quote-form').addEventListener('change', render);
