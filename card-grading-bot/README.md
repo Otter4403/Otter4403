@@ -51,15 +51,25 @@ from each company before you ever mail it in.
    non-blocking "these photos could be clearer" banner. The web UI also has
    a collapsible photo-taking tips panel (lighting, angle, background,
    focus, resolution) above the upload area.
-8. Optionally, `identification.py` reads the card itself off the front
-   photo using Claude's vision API -- year, set/brand, player or character
-   name, card number, and any parallel/variation -- and shows it the way a
-   real grading label would (e.g. "2023 TOPPS CHROME SHOHEI OHTANI #27
-   REFRACTOR"), both above the results and on each slab mockup. This needs
-   an `ANTHROPIC_API_KEY` environment variable (see below); without one,
-   grading works exactly the same, just without this line. It's AI-read
-   from the photo, not guaranteed correct -- the UI always says so and
-   flags low-confidence reads.
+8. Card identification reads the card itself off the front photo -- year,
+   set/brand, player or character name, card number, and any
+   parallel/variation -- and shows it the way a real grading label would
+   (e.g. "2023 TOPPS CHROME SHOHEI OHTANI #27 REFRACTOR"), both above the
+   results and on each slab mockup. Two ways this can work, tried in order:
+   - `identification.py`: Claude's vision API, works for any card type.
+     Needs an `ANTHROPIC_API_KEY` environment variable (see below); without
+     one, this step is skipped.
+   - `pokemon_lookup.py`: a free fallback used whenever the Claude step
+     doesn't run (no key configured) or fails. It OCRs the card's name with
+     Tesseract and matches it against the public
+     [pokemontcg.io](https://pokemontcg.io) database -- no API key, no
+     cost, but it only recognizes Pokemon cards and is less reliable than
+     vision AI since it depends on OCR reading the name text cleanly.
+
+   Either way, it's a best-effort read, not guaranteed correct -- the UI
+   always says so and flags low-confidence reads. With neither path
+   available (no key and no Pokemon match), grading works exactly the
+   same, just without this line.
 
 The slab images are original artwork, not reproductions of any company's
 actual holder design, logo, hologram, or barcode. What they do borrow are
@@ -132,9 +142,8 @@ photo, and click **Grade My Card**.
 
 ### Optional: card identification
 
-To have Otter Grading read the card's name/set/year off the photo (via
-Claude's vision API), set an environment variable before starting the
-server:
+**Any card, via Claude's vision API (costs a tiny amount per request):**
+set an environment variable before starting the server:
 
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-...   # from https://console.anthropic.com/
@@ -143,8 +152,18 @@ export ANTHROPIC_API_KEY=sk-ant-...   # from https://console.anthropic.com/
 On Railway, add it as a variable on the service (Settings → Variables).
 Each grading request that includes identification costs a small fraction
 of a cent (it uses Haiku by default; override with `CARD_ID_MODEL` if you
-want a different model). Leave it unset and everything else works exactly
-the same, just without the identified card name showing up.
+want a different model).
+
+**Pokemon cards only, for free, no key needed:** as long as the
+`tesseract-ocr` system binary is installed (already set up for this repo's
+Railway deployment via `nixpacks.toml`; for local runs, `apt install
+tesseract-ocr` or `brew install tesseract`) and `pytesseract` is in
+`requirements.txt` (it already is), `pokemon_lookup.py` runs automatically
+whenever the Claude step above doesn't produce a result -- either because
+`ANTHROPIC_API_KEY` isn't set, or the card wasn't a good match for it.
+
+Leave both unconfigured and grading still works exactly the same, just
+without the identified card name showing up.
 
 ## Deploying (Railway)
 
@@ -182,7 +201,10 @@ both directions (a sharp, well-lit synthetic photo passes clean; a heavily
 blurred, tiny, or flat/dark one blocks) without needing real card photos.
 The identification tests mock the Anthropic client entirely (no network
 calls, no API key needed) to check the no-key/no-package/API-error fail
--soft paths and the label-line formatting.
+-soft paths and the label-line formatting. The Pokemon lookup tests mock
+`pytesseract` and `httpx` the same way (one test also runs the real
+Tesseract binary against a synthetic image to confirm the OCR integration
+itself works, separate from the mocked unit tests).
 
 ## Project layout
 

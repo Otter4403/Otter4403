@@ -10,6 +10,7 @@ from .explanations import build_explanations
 from .grading import grade_all
 from .identification import identify_card
 from .models import GradeResponse, MeasurementsOut
+from .pokemon_lookup import identify_pokemon_card
 from .rendering import render_slab_png
 from .vision import analyze_card, decode_image, has_blocking_issue
 from .vision.annotate import render_annotated_photo
@@ -63,6 +64,10 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
 
     _, front_card_buf = cv2.imencode(".jpg", analysis.front_card)
     identification = await identify_card(front_card_buf.tobytes())
+    if identification is None:
+        # No ANTHROPIC_API_KEY (or the vision call failed) -- fall back to
+        # the free, Pokemon-only OCR + pokemontcg.io lookup.
+        identification = await identify_pokemon_card(front_card_buf.tobytes())
     card_label = identification.label_line if identification and identification.identified else None
 
     explanations = build_explanations(subgrades, analysis.front_surface, analysis.back_surface)

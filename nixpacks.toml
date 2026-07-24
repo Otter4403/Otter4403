@@ -1,0 +1,5 @@
+# Adds the Tesseract OCR system binary, needed by the free Pokemon card
+# identification fallback (backend/app/pokemon_lookup.py). "..." keeps
+# Nixpacks' own auto-detected apt packages instead of replacing them.
+[phases.setup]
+aptPkgs = ["...", "tesseract-ocr", "tesseract-ocr-eng"]
