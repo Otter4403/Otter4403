@@ -18,7 +18,11 @@ from each company before you ever mail it in.
 
 1. You upload a front and back photo of a card through the web UI.
 2. A small computer-vision pipeline (OpenCV):
-   - finds the card in the photo and straightens/crops it (`vision/preprocess.py`)
+   - finds the card in the photo and straightens/crops it, correcting for
+     camera angle via a full perspective (homography) warp rather than a
+     simple axis-aligned crop -- so a photo taken at a moderate angle
+     still gets measured against a squared-up view of the card
+     (`vision/preprocess.py`)
    - measures **centering** by locating the border-to-artwork line on each side of both the front and back photos (`vision/centering.py`)
    - scores **corners** for whitening/wear and tip sharpness (`vision/corners.py`)
    - scores **edges** for whitening/chipping along each side (`vision/edges.py`)
@@ -231,9 +235,11 @@ card-grading-bot/
 
 ## Known limitations
 
-- Photo quality, lighting, angle, and background contrast all affect
-  detection accuracy -- a well-lit photo directly above the card on a
-  plain, contrasting background works best.
+- Photo quality, lighting, and background contrast all affect detection
+  accuracy -- a well-lit photo on a plain, contrasting background works
+  best. Moderate camera angles are corrected automatically (see below);
+  a photo taken close to straight-on still gives the most accurate
+  measurements.
 - The corner/edge/surface heuristics look for whitening and texture
   anomalies; they can be fooled by cards with naturally light borders/art
   or by glare, reflections, and sleeves/toploaders in the photo.

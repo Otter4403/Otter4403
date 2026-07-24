@@ -12,6 +12,8 @@ import cv2
 import numpy as np
 
 STANDARD_ASPECT = 2.5 / 3.5  # width / height for a standard trading card
+ASPECT_TOLERANCE = 0.15
+_POLY_EPSILON_FACTORS = (0.01, 0.02, 0.03, 0.05)
 
 
 def order_points(pts: np.ndarray) -> np.ndarray:
@@ -26,11 +28,41 @@ def order_points(pts: np.ndarray) -> np.ndarray:
     return rect
 
 
+def _approx_quad(contour: np.ndarray) -> Optional[np.ndarray]:
+    """Try a range of approxPolyDP tolerances and return the first one that
+    collapses the contour to exactly 4 points. A single fixed tolerance
+    can miss on angled photos where a corner rounds off slightly or a
+    shadow blurs an edge, turning what's really a 4-sided card into a
+    5-8 point approximation."""
+    peri = cv2.arcLength(contour, True)
+    for factor in _POLY_EPSILON_FACTORS:
+        approx = cv2.approxPolyDP(contour, factor * peri, True)
+        if len(approx) == 4:
+            return approx.reshape(4, 2).astype(np.float32)
+    return None
+
+
+def _aspect_ratio_ok(pts: np.ndarray) -> bool:
+    """Sanity-check a detected quad against a standard trading card's
+    2.5:3.5 aspect ratio (either orientation, generous tolerance for
+    perspective noise) -- catches shapes that technically have 4 corners
+    but clearly aren't a card (a stray shadow, half the background)."""
+    rect = order_points(pts)
+    (tl, tr, br, bl) = rect
+    width = max(float(np.linalg.norm(br - bl)), float(np.linalg.norm(tr - tl)), 1.0)
+    height = max(float(np.linalg.norm(tr - br)), float(np.linalg.norm(tl - bl)), 1.0)
+    ratio = min(width, height) / max(width, height)
+    return abs(ratio - STANDARD_ASPECT) < ASPECT_TOLERANCE
+
+
 def _largest_quad(gray: np.ndarray) -> "tuple[Optional[np.ndarray], bool]":
-    """Returns (points, is_clean_quad). is_clean_quad is True only when the
-    largest contour approximated to an actual 4-point polygon -- a bounding
-    -box fallback or no contour at all both report False, since those mean
-    detection couldn't confidently isolate the card's true edges."""
+    """Returns (points, is_clean_quad). is_clean_quad is True when the
+    detected shape both resolves to 4 points and plausibly matches a
+    card's aspect ratio -- False means detection couldn't confidently
+    isolate the card, though a best-effort (still perspective-corrected,
+    not just cropped) quad is still returned when any shape was found at
+    all, so an uncertain photo still gets straightened rather than left
+    at whatever angle it was shot."""
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(blur, 30, 100)
     edges = cv2.dilate(edges, np.ones((5, 5), np.uint8), iterations=1)
@@ -43,13 +75,21 @@ def _largest_quad(gray: np.ndarray) -> "tuple[Optional[np.ndarray], bool]":
     if cv2.contourArea(largest) < 0.1 * frame_area:
         return None, False
 
-    peri = cv2.arcLength(largest, True)
-    approx = cv2.approxPolyDP(largest, 0.02 * peri, True)
-    if len(approx) == 4:
-        return approx.reshape(4, 2).astype(np.float32), True
+    approx = _approx_quad(largest)
+    if approx is not None and _aspect_ratio_ok(approx):
+        return approx, True
 
-    x, y, w, h = cv2.boundingRect(largest)
-    return np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=np.float32), False
+    # approxPolyDP either never collapsed to exactly 4 points, or did but
+    # the result doesn't look like a card. cv2.minAreaRect finds the
+    # tightest ROTATED rectangle around the whole contour, so it captures
+    # a tilted card correctly even then -- unlike an axis-aligned bounding
+    # box, which would just crop the tilt in instead of correcting it.
+    rotated = cv2.minAreaRect(largest)
+    box = cv2.boxPoints(rotated).astype(np.float32)
+    if _aspect_ratio_ok(box):
+        return box, True
+
+    return (approx if approx is not None else box), False
 
 
 def detect_card_with_confidence(image: np.ndarray) -> "tuple[np.ndarray, bool]":
