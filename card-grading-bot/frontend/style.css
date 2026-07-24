@@ -337,6 +337,10 @@ button#grade-btn:not(:disabled):active {
   box-shadow: var(--shadow);
 }
 
+.card-id[hidden] {
+  display: none;
+}
+
 .card-id .card-id-icon {
   font-size: 1.3rem;
   flex-shrink: 0;
