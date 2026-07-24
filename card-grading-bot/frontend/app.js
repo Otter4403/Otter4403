@@ -14,7 +14,12 @@ function setupDropZone(zoneId, inputId, previewId, key) {
     updateButtonState();
   };
 
-  zone.addEventListener("click", () => input.click());
+  // No explicit input.click() here: the <input> is a descendant of this
+  // <label>, so clicking anywhere in the zone already natively opens the
+  // file picker. Calling input.click() again on top of that double-fires
+  // it in the same tick -- harmless on most desktop browsers, but iOS
+  // Safari frequently drops the selection entirely when that happens
+  // (the picker opens, a photo gets picked, and nothing comes back).
   input.addEventListener("change", (e) => handleFile(e.target.files[0]));
 
   ["dragenter", "dragover"].forEach((evt) =>
