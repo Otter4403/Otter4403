@@ -145,6 +145,11 @@ body {
   line-height: 1.5;
 }
 
+.disclaimer > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .disclaimer-icon {
   flex-shrink: 0;
   font-weight: 700;
@@ -337,15 +342,25 @@ button#grade-btn:not(:disabled):active {
   flex-shrink: 0;
 }
 
+/* Flex items default to min-width:auto, which stops long text from
+   wrapping and lets it overflow the container instead -- min-width:0
+   lets this child shrink to the row's actual width so the title/meta
+   text below wraps normally. */
+.card-id > div {
+  min-width: 0;
+}
+
 .card-id .card-id-title {
   font-weight: 700;
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 
 .card-id .card-id-meta {
   color: var(--muted);
   font-size: 0.78rem;
   margin-top: 0.15rem;
+  overflow-wrap: anywhere;
 }
 
 .card-id.unidentified {
@@ -558,9 +573,19 @@ button#grade-btn:not(:disabled):active {
 .result-card .sub-list li {
   display: flex;
   justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.2rem 0;
   border-bottom: 1px dashed var(--border);
   text-transform: capitalize;
+}
+
+.result-card .sub-list li span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.result-card .sub-list li span:last-child {
+  flex-shrink: 0;
 }
 
 .result-card .notes {
