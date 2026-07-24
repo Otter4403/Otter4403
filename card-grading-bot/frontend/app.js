@@ -77,6 +77,28 @@ function renderDiagnostics(m) {
     .join("");
 }
 
+function renderQualityWarnings(warnings) {
+  const el = document.getElementById("quality-warnings");
+  if (!warnings || warnings.length === 0) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  const items = warnings.map((w) => `<li>${w.message}</li>`).join("");
+  el.innerHTML = `<strong>Heads up &mdash; these photos could be clearer:</strong><ul>${items}</ul>`;
+  el.hidden = false;
+}
+
+function formatApiError(err, status) {
+  const detail = err && err.detail;
+  if (detail && typeof detail === "object" && detail.type === "photo_quality") {
+    const lines = detail.issues.map((i) => `• ${i.message}`);
+    return [detail.message, ...lines].join("\n");
+  }
+  if (typeof detail === "string") return detail;
+  return `Request failed (${status})`;
+}
+
 const ACCENT_VARS = {
   PSA: "--psa",
   "Beckett (BGS)": "--bgs",
@@ -123,9 +145,10 @@ async function submitGrade() {
     const res = await fetch("/api/grade", { method: "POST", body: formData });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || `Request failed (${res.status})`);
+      throw new Error(formatApiError(err, res.status));
     }
     const data = await res.json();
+    renderQualityWarnings(data.quality_warnings);
     renderDiagnostics(data.measurements);
     renderMeasurements(data.measurements);
     renderResults(data.results);

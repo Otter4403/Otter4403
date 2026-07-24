@@ -26,37 +26,42 @@ def order_points(pts: np.ndarray) -> np.ndarray:
     return rect
 
 
-def _largest_quad(gray: np.ndarray) -> Optional[np.ndarray]:
+def _largest_quad(gray: np.ndarray) -> "tuple[Optional[np.ndarray], bool]":
+    """Returns (points, is_clean_quad). is_clean_quad is True only when the
+    largest contour approximated to an actual 4-point polygon -- a bounding
+    -box fallback or no contour at all both report False, since those mean
+    detection couldn't confidently isolate the card's true edges."""
     blur = cv2.GaussianBlur(gray, (5, 5), 0)
     edges = cv2.Canny(blur, 30, 100)
     edges = cv2.dilate(edges, np.ones((5, 5), np.uint8), iterations=1)
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return None
+        return None, False
 
     frame_area = gray.shape[0] * gray.shape[1]
     largest = max(contours, key=cv2.contourArea)
     if cv2.contourArea(largest) < 0.1 * frame_area:
-        return None
+        return None, False
 
     peri = cv2.arcLength(largest, True)
     approx = cv2.approxPolyDP(largest, 0.02 * peri, True)
     if len(approx) == 4:
-        return approx.reshape(4, 2).astype(np.float32)
+        return approx.reshape(4, 2).astype(np.float32), True
 
     x, y, w, h = cv2.boundingRect(largest)
-    return np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=np.float32)
+    return np.array([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], dtype=np.float32), False
 
 
-def detect_card(image: np.ndarray) -> np.ndarray:
-    """Return a straightened, portrait-oriented crop of the card found in
-    `image`. Falls back to the original image if no clear quadrilateral can
-    be found (e.g. the photo is already a tight crop of just the card)."""
+def detect_card_with_confidence(image: np.ndarray) -> "tuple[np.ndarray, bool]":
+    """Like `detect_card`, but also reports whether a clean 4-point card
+    outline was actually found (as opposed to falling back to a bounding
+    box or the untouched original photo) -- useful for warning the user
+    when the photo made detection unreliable."""
     if image is None or image.size == 0:
         raise ValueError("Empty image")
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    pts = _largest_quad(gray)
+    pts, quad_found = _largest_quad(gray)
     if pts is None:
         warped = image
     else:
@@ -83,6 +88,14 @@ def detect_card(image: np.ndarray) -> np.ndarray:
     h, w = warped.shape[:2]
     if w > h:
         warped = cv2.rotate(warped, cv2.ROTATE_90_CLOCKWISE)
+    return warped, quad_found
+
+
+def detect_card(image: np.ndarray) -> np.ndarray:
+    """Return a straightened, portrait-oriented crop of the card found in
+    `image`. Falls back to the original image if no clear quadrilateral can
+    be found (e.g. the photo is already a tight crop of just the card)."""
+    warped, _ = detect_card_with_confidence(image)
     return warped
 
 

@@ -9,7 +9,7 @@ from .explanations import build_explanations
 from .grading import grade_all
 from .models import GradeResponse, MeasurementsOut
 from .rendering import render_slab_png
-from .vision import analyze_card, decode_image
+from .vision import analyze_card, decode_image, has_blocking_issue
 from .vision.annotate import render_annotated_photo
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per image
@@ -48,6 +48,14 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=f"Could not analyze card images: {exc}")
 
+    if has_blocking_issue(analysis.quality_issues):
+        blocking = [i for i in analysis.quality_issues if i.severity == "blocking"]
+        raise HTTPException(status_code=422, detail={
+            "type": "photo_quality",
+            "message": "One or more photos aren't clear enough to grade reliably. Please retake and resubmit.",
+            "issues": [{"side": i.side, "code": i.code, "message": i.message} for i in blocking],
+        })
+
     subgrades = analysis.subgrades
     results = grade_all(subgrades)
 
@@ -84,9 +92,12 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
             "slab_image_base64": base64.b64encode(slab_png).decode("ascii"),
         })
 
+    warnings = [i for i in analysis.quality_issues if i.severity == "warning"]
+
     return GradeResponse(
         measurements=measurements,
         results=results_out,
+        quality_warnings=[{"side": i.side, "code": i.code, "message": i.message} for i in warnings],
     )
 
 

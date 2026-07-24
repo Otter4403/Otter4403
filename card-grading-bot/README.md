@@ -42,6 +42,15 @@ from each company before you ever mail it in.
    a highlight over any area flagged as a surface blemish -- plus a
    plain-English sentence per attribute naming the weakest corner/edge and
    how far off centering is, so a 9.5 isn't just a number.
+7. Before any of that runs, `vision/quality.py` checks whether each photo
+   is actually usable: sharpness (Laplacian variance), resolution, contrast,
+   and whether the card's edges could be confidently isolated at all. A
+   badly blurry, tiny, or washed-out photo gets rejected with a specific
+   "please retake the front/back photo" message instead of silently
+   producing a misleading grade; milder issues still get graded but show a
+   non-blocking "these photos could be clearer" banner. The web UI also has
+   a collapsible photo-taking tips panel (lighting, angle, background,
+   focus, resolution) above the upload area.
 
 The slab images are original artwork, not reproductions of any company's
 actual holder design, logo, hologram, or barcode. What they do borrow are
@@ -101,7 +110,10 @@ that long names/labels get truncated instead of overlapping other text.
 The annotation and explanation tests check that the diagnostic overlay
 renders for edge cases (missing corner/edge data, an empty blemish mask,
 no centering measurement for the back photo) and that the generated
-sentences correctly name the weakest corner/edge/side.
+sentences correctly name the weakest corner/edge/side. The quality-check
+tests verify the blur/resolution/contrast thresholds trigger correctly in
+both directions (a sharp, well-lit synthetic photo passes clean; a heavily
+blurred, tiny, or flat/dark one blocks) without needing real card photos.
 
 ## Project layout
 
@@ -114,11 +126,12 @@ card-grading-bot/
       explanations.py      Builds the plain-English "why this grade" text per attribute
       grading/            Per-company rule engines (pure functions, no images involved)
       vision/              OpenCV pipeline: card detection, centering, corners, edges, surface,
-                           plus annotate.py for the diagnostic overlay image
+                           plus annotate.py for the diagnostic overlay and quality.py for the
+                           blur/resolution/contrast checks
       rendering/           Pillow-based slab mockup generator
       fonts/                Bundled DejaVu Sans/Bold, shared by rendering/ and vision/annotate.py
     tests/                 pytest unit tests for grading rules, vision helpers, slab rendering,
-                           annotation, and explanations
+                           annotation, explanations, and photo quality checks
     requirements.txt
   frontend/
     index.html / style.css / app.js   Drag-and-drop upload UI, no build step

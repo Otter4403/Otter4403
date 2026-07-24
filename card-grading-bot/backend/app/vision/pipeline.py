@@ -1,14 +1,16 @@
 """Orchestrates the full front+back analysis into a single SubGrades."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import List
 
 import numpy as np
 
 from ..grading.base import SubGrades
-from .preprocess import detect_card
+from .preprocess import detect_card_with_confidence
 from .centering import CenteringResult, measure_centering
 from .corners import CornerResult, measure_corners
 from .edges import EdgeResult, measure_edges
+from .quality import QualityIssue, assess_quality
 from .surface import SurfaceResult, measure_surface
 
 CORNER_FRONT_WEIGHT = 0.6
@@ -29,11 +31,17 @@ class AnalysisResult:
     back_edges: EdgeResult
     front_surface: SurfaceResult
     back_surface: SurfaceResult
+    quality_issues: List[QualityIssue] = field(default_factory=list)
 
 
 def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
-    front = detect_card(front_img)
-    back = detect_card(back_img)
+    front, front_quad_found = detect_card_with_confidence(front_img)
+    back, back_quad_found = detect_card_with_confidence(back_img)
+
+    quality_issues = (
+        assess_quality(front, front_quad_found, "front")
+        + assess_quality(back, back_quad_found, "back")
+    )
 
     centering = measure_centering(front)
 
@@ -82,4 +90,5 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
         front_corners=corners_front, back_corners=corners_back,
         front_edges=edges_front, back_edges=edges_back,
         front_surface=surface_front, back_surface=surface_back,
+        quality_issues=quality_issues,
     )

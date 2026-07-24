@@ -26,6 +26,13 @@ class MeasurementsOut(BaseModel):
     annotated_back_base64: str
 
 
+class QualityWarningOut(BaseModel):
+    side: str
+    code: str
+    message: str
+
+
 class GradeResponse(BaseModel):
     measurements: MeasurementsOut
     results: List[GradeResultOut]
+    quality_warnings: List[QualityWarningOut] = []
