@@ -317,6 +317,15 @@ button#grade-btn:not(:disabled):active {
   box-shadow: var(--shadow);
 }
 
+.result-card .slab-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 0.9rem;
+  box-shadow: var(--shadow);
+}
+
 .result-card .company {
   font-size: 0.78rem;
   font-weight: 700;

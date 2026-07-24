@@ -28,9 +28,19 @@ from each company before you ever mail it in.
    `grading/sgc.py`, `grading/hga.py`), each applying that company's own
    scale, granularity, and combination logic, described in each module's
    docstring.
-4. The web UI shows all six grades side by side with the underlying
-   subgrades and measurements, so you can compare how each company's rules
-   treat the same card.
+4. Each grade also gets rendered as a stylized "slab" mockup
+   (`rendering/slabs.py`, using Pillow) showing your actual submitted card
+   inside a generic plastic-holder graphic with that company's grade on the
+   label, so you can see side by side what each result would look like.
+5. The web UI shows all six slabs and grades side by side with the
+   underlying subgrades and measurements, so you can compare how each
+   company's rules treat the same card.
+
+The slab images are original, generic artwork -- a rounded-rectangle case
+with a colored label band and plain text. They do not reproduce any
+company's actual holder design, logo, hologram, barcode, or other security
+feature, and every slab is watermarked "UNOFFICIAL" with a fake, clearly
+non-real certification number.
 
 ## How each company's rules are approximated
 
@@ -76,6 +86,8 @@ python3 -m pytest tests/ -v
 The grading-rule tests are pure unit tests (no images needed). The vision
 tests use small synthetic images (solid-color rectangles standing in for a
 card and its border) so they run fast and don't require real card photos.
+The slab-rendering tests check that every company renders a valid PNG and
+that long names/labels get truncated instead of overlapping other text.
 
 ## Project layout
 
@@ -87,7 +99,8 @@ card-grading-bot/
       models.py           Pydantic request/response schemas
       grading/            Per-company rule engines (pure functions, no images involved)
       vision/              OpenCV pipeline: card detection, centering, corners, edges, surface
-    tests/                 pytest unit tests for both grading rules and vision helpers
+      rendering/           Pillow-based slab mockup generator + bundled DejaVu font
+    tests/                 pytest unit tests for grading rules, vision helpers, and slab rendering
     requirements.txt
   frontend/
     index.html / style.css / app.js   Drag-and-drop upload UI, no build step

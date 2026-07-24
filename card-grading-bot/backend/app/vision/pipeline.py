@@ -1,5 +1,7 @@
 """Orchestrates the full front+back analysis into a single SubGrades."""
 
+from dataclasses import dataclass
+
 import numpy as np
 
 from ..grading.base import SubGrades
@@ -13,7 +15,14 @@ CORNER_FRONT_WEIGHT = 0.6
 EDGE_FRONT_WEIGHT = 0.6
 
 
-def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> SubGrades:
+@dataclass
+class AnalysisResult:
+    subgrades: SubGrades
+    front_card: np.ndarray
+    back_card: np.ndarray
+
+
+def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> AnalysisResult:
     front = detect_card(front_img)
     back = detect_card(back_img)
 
@@ -48,7 +57,7 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> SubGrades:
         "Corners and edges are a 60/40 front/back weighted blend; surface uses the worse of the two sides.",
     ]
 
-    return SubGrades(
+    subgrades = SubGrades(
         centering_lr=centering.lr,
         centering_tb=centering.tb,
         corners=corners_score,
@@ -58,3 +67,4 @@ def analyze_card(front_img: np.ndarray, back_img: np.ndarray) -> SubGrades:
         edge_details=edge_details,
         notes=notes,
     )
+    return AnalysisResult(subgrades=subgrades, front_card=front, back_card=back)

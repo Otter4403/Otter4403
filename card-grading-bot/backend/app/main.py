@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -6,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .grading import grade_all
 from .models import GradeResponse, MeasurementsOut
+from .rendering import render_slab_png
 from .vision import analyze_card, decode_image
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB per image
@@ -40,10 +42,11 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
         raise HTTPException(status_code=400, detail=str(exc))
 
     try:
-        subgrades = analyze_card(front_img, back_img)
+        analysis = analyze_card(front_img, back_img)
     except Exception as exc:
         raise HTTPException(status_code=422, detail=f"Could not analyze card images: {exc}")
 
+    subgrades = analysis.subgrades
     results = grade_all(subgrades)
 
     measurements = MeasurementsOut(
@@ -56,9 +59,20 @@ async def grade_card(front: UploadFile = File(...), back: UploadFile = File(...)
         edge_details={k: round(v, 2) for k, v in (subgrades.edge_details or {}).items()},
     )
 
+    results_out = []
+    for company_key, result in results.items():
+        slab_png = render_slab_png(
+            analysis.front_card, company_key, result.overall, result.label,
+            cert_seed=front_bytes,
+        )
+        results_out.append({
+            **result.to_dict(),
+            "slab_image_base64": base64.b64encode(slab_png).decode("ascii"),
+        })
+
     return GradeResponse(
         measurements=measurements,
-        results=[r.to_dict() for r in results.values()],
+        results=results_out,
     )
 
 

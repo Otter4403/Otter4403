@@ -78,8 +78,10 @@ function renderResults(results) {
         .join("");
       const notes = r.notes.map((n) => `<div>${n}</div>`).join("");
       const accentVar = ACCENT_VARS[r.company] || "--accent";
+      const slabAlt = `Mockup of the submitted card in a ${r.company} slab, estimated grade ${r.overall} ${r.label}`;
       return `
         <div class="result-card" style="--card-accent: var(${accentVar})">
+          <img class="slab-image" src="data:image/png;base64,${r.slab_image_base64}" alt="${slabAlt}" loading="lazy" />
           <div class="company">${r.company}</div>
           <div class="grade">${r.overall}</div>
           <div class="label">${r.label}</div>

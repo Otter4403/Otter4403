@@ -10,6 +10,7 @@ class GradeResultOut(BaseModel):
     subgrades: Dict[str, float]
     scale: str
     notes: List[str]
+    slab_image_base64: str
 
 
 class MeasurementsOut(BaseModel):
