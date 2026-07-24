@@ -224,7 +224,9 @@
   }
   .checkbox-field input { width: 16px; height: 16px; accent-color: var(--accent); }
   .checkbox-field label { font-size: 13.5px; color: var(--ink); font-weight: 500; }
+  .checkbox-field input:disabled + label { color: var(--ink-faint); }
   .hint { font-size: 11.5px; color: var(--ink-faint); margin: -3px 0 0; }
+  .hint:not(:last-child) { margin-bottom: 14px; }
 
   .ledger-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .ledger-head h2 { font-size: 22px; }
@@ -285,6 +287,19 @@
   .notes ul { margin: 8px 0 0; padding-left: 18px; }
   .notes li { margin-bottom: 4px; }
 
+  .breakdown {
+    margin: 14px 0 0;
+    padding: 12px 14px;
+    background: var(--surface-sunken);
+    border-radius: 8px;
+    font-size: 12.5px;
+  }
+  .breakdown-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .breakdown-row.total { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 7px; font-weight: 600; color: var(--ink); }
+  .breakdown-label { color: var(--ink-soft); }
+  .breakdown-row.total .breakdown-label { color: var(--ink); }
+  .breakdown-value { font-weight: 500; }
+
   @media (max-width: 560px) {
     .insurer-row summary { grid-template-columns: 20px 1fr auto; }
     .premium-monthly { display: none; }
@@ -325,7 +340,7 @@
     <h1>Car insurance comparison ledger</h1>
     <p class="dek">Enter your details once. See a modelled, side-by-side estimate across seven major NZ insurers, live as you type.</p>
     <p class="disclaimer-banner">
-      <strong>These are modelled estimates, not real quotes.</strong> Figures come from a simplified rating model built on commonly published risk factors (age, location, vehicle, claims history, cover level) — they are not sourced from, endorsed by, or affiliated with any insurer below. Actual premiums depend on full underwriting and can differ substantially. Get an actual quote from each insurer before buying.
+      <strong>These are modelled estimates, not real quotes.</strong> Figures are calibrated to sit within the premium ranges typically reported for NZ comprehensive car insurance (including optional extras below) — they are not sourced from, endorsed by, or affiliated with any insurer listed. No insurer publishes a live rating API, so actual underwriting can still push a real quote higher or lower than shown here. Get an actual quote from each insurer before buying.
     </p>
   </header>
 
@@ -436,6 +451,39 @@
           </select>
         </div>
       </fieldset>
+
+      <fieldset>
+        <legend><span class="letter">E</span>Optional add-ons</legend>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-roadside" />
+          <label for="addon-roadside">Roadside assistance</label>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-glass" />
+          <label for="addon-glass">Windscreen / glass excess waiver</label>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-ncbProtect" />
+          <label for="addon-ncbProtect">No-claims bonus protection</label>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-rentalCar" />
+          <label for="addon-rentalCar">Rental car after a claim</label>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-newForOld" />
+          <label for="addon-newForOld">New-for-old replacement</label>
+        </div>
+        <p class="hint" id="newForOld-hint">Only offered on vehicles under 3 years old</p>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-liability" />
+          <label for="addon-liability">Increased third-party liability limit</label>
+        </div>
+        <div class="checkbox-field">
+          <input type="checkbox" id="addon-effects" />
+          <label for="addon-effects">Personal effects &amp; accessories cover</label>
+        </div>
+      </fieldset>
     </form>
 
     <section aria-live="polite">
@@ -461,72 +509,94 @@
 
 <script>
 (function () {
+  var ADDONS = [
+    { key: 'roadside', label: 'Roadside assistance', cost: 65 },
+    { key: 'glass', label: 'Windscreen / glass excess waiver', cost: 50 },
+    { key: 'ncbProtect', label: 'No-claims bonus protection', cost: 60 },
+    { key: 'rentalCar', label: 'Rental car after a claim', cost: 100 },
+    { key: 'newForOld', label: 'New-for-old replacement', cost: 85, requiresNewVehicle: true },
+    { key: 'liability', label: 'Increased third-party liability limit', cost: 35 },
+    { key: 'effects', label: 'Personal effects & accessories cover', cost: 40 }
+  ];
+
   var INSURERS = [
     {
-      key: 'aa', name: 'AA Insurance', multiplier: 1.02, offset: 10, youngAdj: 1.00,
+      key: 'aa', name: 'AA Insurance', multiplier: 1.05, offset: 40, youngAdj: 1.00,
+      addonOverrides: { roadside: 0 },
       notes: [
-        'Linked to AA Membership; roadside assistance is commonly bundled in.',
+        'Linked to AA Membership; roadside assistance is commonly included at no extra cost.',
         'Long-established insurer with broad phone and in-person support.'
       ]
     },
     {
-      key: 'state', name: 'State', multiplier: 0.97, offset: 0, youngAdj: 1.00,
+      key: 'state', name: 'State', multiplier: 0.98, offset: 0, youngAdj: 1.00,
+      addonOverrides: { rentalCar: 0 },
       notes: [
         'Part of the IAG group (alongside AMI and NZI).',
+        'Rental car after a claim is commonly included as standard.',
         'Multi-policy bundling with home/contents can add further savings.'
       ]
     },
     {
-      key: 'ami', name: 'AMI', multiplier: 0.99, offset: 0, youngAdj: 1.00,
+      key: 'ami', name: 'AMI', multiplier: 1.00, offset: 0, youngAdj: 1.00,
+      addonOverrides: { glass: 0 },
       notes: [
         'Also part of the IAG group; strong presence outside the main centres.',
+        'Windscreen/glass claims are commonly excess-free as standard.',
         'Often competitive for provincial and rural addresses.'
       ]
     },
     {
-      key: 'tower', name: 'Tower', multiplier: 0.95, offset: 15, youngAdj: 1.05,
+      key: 'tower', name: 'Tower', multiplier: 0.97, offset: 55, youngAdj: 1.08,
+      addonOverrides: { ncbProtect: 0 },
       notes: [
-        'Runs a no-claims bonus programme that rewards a clean driving history.',
+        'Runs a no-claims bonus programme; NCB protection is commonly built in.',
         'Traditional underwriting — young-driver loadings tend to run a little higher.'
       ]
     },
     {
-      key: 'cove', name: 'Cove', multiplier: 0.90, offset: -20, youngAdj: 0.92,
+      key: 'cove', name: 'Cove', multiplier: 0.90, offset: -60, youngAdj: 0.94,
+      addonOverrides: { roadside: 40, rentalCar: 75 },
       notes: [
         'Online and app-only insurer — no phone underwriting, self-service claims.',
+        'Cheaper add-on pricing via app-based partners, but fewer bundled extras.',
         'Digital-first pricing can favour lower-risk and younger digitally-engaged drivers.'
       ]
     },
     {
-      key: 'trademe', name: 'Trade Me Insurance', multiplier: 0.93, offset: -10, youngAdj: 0.97,
+      key: 'trademe', name: 'Trade Me Insurance', multiplier: 0.94, offset: -35, youngAdj: 0.98,
+      addonOverrides: {},
       notes: [
         'Direct online insurer underwritten by Vero.',
-        'Straightforward self-service quoting, minimal add-ons.'
+        'Straightforward self-service quoting; extras are priced individually.'
       ]
     },
     {
-      key: 'initio', name: 'Initio', multiplier: 0.89, offset: -25, youngAdj: 1.08,
+      key: 'initio', name: 'Initio', multiplier: 0.88, offset: -80, youngAdj: 1.10,
+      addonOverrides: { roadside: 75, rentalCar: 115, glass: 60 },
       notes: [
         'Budget-focused online insurer, also underwritten by Vero.',
-        'Lower base pricing with fewer optional extras; check inclusions carefully.'
+        'Lowest base pricing, but add-ons cost more individually — check inclusions carefully.'
       ]
     }
   ];
 
   var AGE_BRACKETS = [
-    { max: 21, factor: 1.85 },
-    { max: 25, factor: 1.50 },
-    { max: 30, factor: 1.20 },
+    { max: 21, factor: 2.10 },
+    { max: 25, factor: 1.65 },
+    { max: 30, factor: 1.25 },
     { max: 60, factor: 1.00 },
-    { max: 70, factor: 1.05 },
-    { max: Infinity, factor: 1.20 }
+    { max: 70, factor: 1.08 },
+    { max: Infinity, factor: 1.25 }
   ];
-  var REGION_FACTOR = { auckland: 1.15, wellington: 1.05, christchurch: 1.05, northIsland: 1.00, southIsland: 0.95 };
-  var COVER_FACTOR = { comprehensive: 1.00, tpft: 0.55, tpo: 0.35 };
-  var EXCESS_FACTOR = { '250': 1.10, '500': 1.00, '1000': 0.92, '2000': 0.85 };
-  var USAGE_FACTOR = { private: 1.00, commute: 1.08, business: 1.25 };
-  var PARKING_FACTOR = { garage: 0.95, driveway: 1.00, street: 1.08 };
-  var BASE_PREMIUM = 620;
+  var REGION_FACTOR = { auckland: 1.18, wellington: 1.06, christchurch: 1.06, northIsland: 1.00, southIsland: 0.95 };
+  var COVER_FACTOR = { comprehensive: 1.00, tpft: 0.52, tpo: 0.32 };
+  var EXCESS_FACTOR = { '250': 1.12, '500': 1.00, '1000': 0.90, '2000': 0.82 };
+  var USAGE_FACTOR = { private: 1.00, commute: 1.10, business: 1.30 };
+  var PARKING_FACTOR = { garage: 0.94, driveway: 1.00, street: 1.10 };
+  var BASE_PREMIUM = 1400;
+  var MIN_COMBINED = 0.16;
+  var MAX_COMBINED = 6.0;
 
   var currency = new Intl.NumberFormat('en-NZ', { style: 'currency', currency: 'NZD', maximumFractionDigits: 0 });
   var currentYear = new Date().getFullYear();
@@ -539,6 +609,11 @@
   }
 
   function readInputs() {
+    var selectedAddons = ADDONS.filter(function (a) {
+      var el = document.getElementById('addon-' + a.key);
+      return el && el.checked;
+    }).map(function (a) { return a.key; });
+
     return {
       driverAge: Number(document.getElementById('driverAge').value) || 35,
       yearsLicensed: Number(document.getElementById('yearsLicensed').value) || 0,
@@ -552,8 +627,35 @@
       multiPolicy: document.getElementById('multiPolicy').checked,
       region: document.getElementById('region').value,
       usage: document.getElementById('usage').value,
-      parking: document.getElementById('parking').value
+      parking: document.getElementById('parking').value,
+      selectedAddons: selectedAddons
     };
+  }
+
+  function updateNewForOldAvailability(inputs) {
+    var vehicleAge = Math.max(0, currentYear - inputs.vehicleYear);
+    var checkbox = document.getElementById('addon-newForOld');
+    var hint = document.getElementById('newForOld-hint');
+    var eligible = vehicleAge < 3;
+    checkbox.disabled = !eligible;
+    if (!eligible) checkbox.checked = false;
+    hint.textContent = eligible
+      ? 'Available on this vehicle (under 3 years old)'
+      : 'Not offered — vehicle is 3 years old or more';
+  }
+
+  function addonCostFor(insurer, addon) {
+    if (insurer.addonOverrides && Object.prototype.hasOwnProperty.call(insurer.addonOverrides, addon.key)) {
+      return insurer.addonOverrides[addon.key];
+    }
+    return addon.cost;
+  }
+
+  function computeAddonBreakdown(insurer, selectedKeys) {
+    var items = ADDONS.filter(function (a) { return selectedKeys.indexOf(a.key) !== -1; })
+      .map(function (a) { return { label: a.label, cost: addonCostFor(insurer, a) }; });
+    var total = items.reduce(function (sum, item) { return sum + item.cost; }, 0);
+    return { items: items, total: total };
   }
 
   function computeFactors(inputs) {
@@ -584,28 +686,35 @@
   }
 
   function combinedOf(f) {
-    return f.ageFactor * f.experienceFactor * f.claimsFactor * f.ncbFactor * f.locationFactor *
+    var raw = f.ageFactor * f.experienceFactor * f.claimsFactor * f.ncbFactor * f.locationFactor *
       f.vehicleValueFactor * f.vehicleAgeFactor * f.coverFactor * f.excessFactor *
       f.usageFactor * f.parkingFactor * f.youngAdditionalFactor * f.multiPolicyFactor;
+    return Math.max(MIN_COMBINED, Math.min(MAX_COMBINED, raw));
   }
 
   function roundTo(value, step) { return Math.round(value / step) * step; }
 
   function render() {
     var inputs = readInputs();
+    updateNewForOldAvailability(inputs);
+    inputs = readInputs();
     var f = computeFactors(inputs);
     var combined = combinedOf(f);
-    var midBeforeInsurer = BASE_PREMIUM * combined;
+    var corePremium = BASE_PREMIUM * combined;
 
     var results = INSURERS.map(function (insurer) {
       var insurerAdjust = insurer.multiplier * (f.isYoungDriver ? insurer.youngAdj : 1.0);
-      var mid = Math.max(120, midBeforeInsurer * insurerAdjust + insurer.offset);
-      mid = roundTo(mid, 5);
+      var core = Math.max(150, corePremium * insurerAdjust + insurer.offset);
+      core = roundTo(core, 10);
+      var addons = computeAddonBreakdown(insurer, inputs.selectedAddons);
+      var mid = core + addons.total;
       return {
         insurer: insurer,
-        low: roundTo(mid * 0.88, 5),
+        core: core,
+        addons: addons,
+        low: roundTo(mid * 0.9, 10),
         mid: mid,
-        high: roundTo(mid * 1.12, 5),
+        high: roundTo(mid * 1.1, 10),
         monthly: mid / 12
       };
     }).sort(function (a, b) { return a.mid - b.mid; });
@@ -633,7 +742,21 @@
 
       var notes = document.createElement('div');
       notes.className = 'notes';
-      notes.innerHTML = '<ul>' + r.insurer.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+      var notesHtml = '<ul>' + r.insurer.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+
+      var breakdownRows = '<div class="breakdown-row"><span class="breakdown-label">Base premium (cover &amp; risk factors)</span><span class="breakdown-value num">' + currency.format(r.core) + '</span></div>';
+      if (r.addons.items.length) {
+        breakdownRows += r.addons.items.map(function (item) {
+          return '<div class="breakdown-row"><span class="breakdown-label">' + item.label + '</span><span class="breakdown-value num">' +
+            (item.cost > 0 ? '+' + currency.format(item.cost) : 'Included') + '</span></div>';
+        }).join('');
+      } else {
+        breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">Add-ons selected</span><span class="breakdown-value">None</span></div>';
+      }
+      breakdownRows += '<div class="breakdown-row total"><span class="breakdown-label">Estimated annual total</span><span class="breakdown-value num">' + currency.format(r.mid) + '</span></div>';
+
+      notesHtml += '<div class="breakdown">' + breakdownRows + '</div>';
+      notes.innerHTML = notesHtml;
 
       details.appendChild(summary);
       details.appendChild(notes);
