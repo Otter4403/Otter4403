@@ -391,7 +391,7 @@
     <h1>Car insurance comparison ledger</h1>
     <p class="dek">Enter your details once. See a modelled, side-by-side estimate across seven major NZ insurers, live as you type.</p>
     <p class="disclaimer-banner">
-      <strong>These are modelled estimates, not real quotes.</strong> Figures are calibrated to sit within the premium ranges typically reported for NZ comprehensive car insurance (including optional extras below) — they are not sourced from, endorsed by, or affiliated with any insurer listed. No insurer publishes a live rating API, so actual underwriting can still push a real quote higher or lower than shown here. Click any row below for a direct link to that insurer's own quote form — that's the only way to get a binding number, and it takes your details straight to them, not through us.
+      <strong>These are modelled estimates, not real quotes.</strong> The base premium is calibrated against NZ's published Q2 2026 average comprehensive premium and real sample quotes from independent comparisons (MoneyHub). Add-on prices use each insurer's own published rate where they publish one — Cove and Trade Me disclose theirs; everywhere else marked is an estimate. No insurer publishes a live rating API, so this still isn't a substitute for underwriting against your actual details. Click any row below for a direct link to that insurer's own quote form — that's the only way to get a binding number, and it takes your details straight to them, not through us.
     </p>
   </header>
 
@@ -570,11 +570,14 @@
 
 <script>
 (function () {
+  // Add-on costs default to published, sourced figures where a real one exists
+  // (Cove and Trade Me publish theirs; see the per-insurer overrides below and
+  // their linked policy pages). Everywhere else these are estimates.
   var ADDONS = [
-    { key: 'roadside', label: 'Roadside assistance', cost: 65 },
-    { key: 'glass', label: 'Windscreen / glass excess waiver', cost: 50 },
+    { key: 'roadside', label: 'Roadside assistance', cost: 60 },
+    { key: 'glass', label: 'Windscreen / glass excess waiver', cost: 72 },
     { key: 'ncbProtect', label: 'No-claims bonus protection', cost: 60 },
-    { key: 'rentalCar', label: 'Rental car after a claim', cost: 100 },
+    { key: 'rentalCar', label: 'Rental car after a claim', cost: 90 },
     { key: 'newForOld', label: 'New-for-old replacement', cost: 85, requiresNewVehicle: true },
     { key: 'liability', label: 'Increased third-party liability limit', cost: 35 },
     { key: 'effects', label: 'Personal effects & accessories cover', cost: 40 }
@@ -583,65 +586,66 @@
   var INSURERS = [
     {
       key: 'aa', name: 'AA Insurance', multiplier: 1.05, offset: 40, youngAdj: 1.00,
-      addonOverrides: { roadside: 0 },
+      addonOverrides: {},
       quoteUrl: 'https://www.aainsurance.co.nz/car-insurance',
       notes: [
-        'Linked to AA Membership; roadside assistance is commonly included at no extra cost.',
+        'Roadside assistance comes through separate AA Membership, not bundled free into the car insurance premium — existing AA Members already have it.',
+        'Excess-free glass cover and rental-car-after-accident are genuine optional extras you can add to the policy.',
         'Long-established insurer with broad phone and in-person support.'
       ]
     },
     {
       key: 'state', name: 'State', multiplier: 0.98, offset: 0, youngAdj: 1.00,
-      addonOverrides: { rentalCar: 0 },
+      addonOverrides: {},
       quoteUrl: 'https://www.state.co.nz/car-insurance',
       notes: [
         'Part of the IAG group (alongside AMI and NZI).',
-        'Rental car after a claim is commonly included as standard.',
+        'Extras like rental car cover are added at quote time — check what your quote already includes before comparing on price alone.',
         'Multi-policy bundling with home/contents can add further savings.'
       ]
     },
     {
       key: 'ami', name: 'AMI', multiplier: 1.00, offset: 0, youngAdj: 1.00,
-      addonOverrides: { glass: 0 },
+      addonOverrides: {},
       quoteUrl: 'https://www.ami.co.nz/car-insurance',
       notes: [
         'Also part of the IAG group; strong presence outside the main centres.',
-        'Windscreen/glass claims are commonly excess-free as standard.',
-        'Often competitive for provincial and rural addresses.'
+        'Drivers under 25 face an extra excess of roughly $500–$750 on top of the standard excess.',
+        'Completing AMI’s Safe Driver course can cut $250 off that excess for up to two years or until you turn 25.'
       ]
     },
     {
       key: 'tower', name: 'Tower', multiplier: 0.97, offset: 55, youngAdj: 1.08,
-      addonOverrides: { ncbProtect: 0 },
+      addonOverrides: { ncbProtect: null },
       quoteUrl: 'https://www.tower.co.nz/car-insurance/',
       notes: [
-        'Runs a no-claims bonus programme; NCB protection is commonly built in.',
-        'Traditional underwriting — young-driver loadings tend to run a little higher.'
+        'Removed its traditional no-claims bonus system in July 2024 — claims history is now factored directly into the price instead of sold as separate NCB protection.',
+        'Three cover tiers to choose from, priced by risk profile rather than a flat NCB discount.'
       ]
     },
     {
       key: 'cove', name: 'Cove', multiplier: 0.90, offset: -60, youngAdj: 0.94,
-      addonOverrides: { roadside: 40, rentalCar: 75 },
+      addonOverrides: { roadside: 50 },
       quoteUrl: 'https://www.coveinsurance.co.nz/car-insurance/',
       notes: [
-        'Online and app-only insurer — no phone underwriting, self-service claims.',
-        'Cheaper add-on pricing via app-based partners, but fewer bundled extras.',
-        'Digital-first pricing can favour lower-risk and younger digitally-engaged drivers.'
+        'Roadside assistance is published from about $45–60/yr (covers the car, two free call-outs/yr) — cheaper than most bundled options.',
+        'Windscreen/glass excess buyout is published from about $6/month ($72/yr), claims are then excess-free.',
+        'Online and app-only insurer — no phone underwriting, self-service claims. Independent comparisons (MoneyHub) have found Cove cheapest in most vehicle/driver combinations tested.'
       ]
     },
     {
       key: 'trademe', name: 'Trade Me Insurance', multiplier: 0.94, offset: -35, youngAdj: 0.98,
-      addonOverrides: {},
+      addonOverrides: { roadside: 36, rentalCar: 60 },
       quoteUrl: 'https://www.trademeinsurance.co.nz/car-insurance',
       notes: [
         'Direct online insurer, underwritten by Tower Limited.',
-        'Straightforward self-service quoting; extras are priced individually.',
+        'Publishes its extras individually: roadside from $3/month, windscreen excess buyout from $6/month, rental car from $5/month (capped at $1,000 comprehensive / $750 third-party fire & theft).',
         'Trade Me members commonly get a discount on premiums.'
       ]
     },
     {
       key: 'initio', name: 'Initio', multiplier: 0.88, offset: -80, youngAdj: 1.10,
-      addonOverrides: { roadside: 75, rentalCar: 115, glass: 60 },
+      addonOverrides: { roadside: 75, rentalCar: 115, glass: 85 },
       quoteUrl: 'https://initio.co.nz/car-insurance/',
       eligibilityNote: 'Requires an existing Initio home/landlord policy',
       notes: [
@@ -883,8 +887,9 @@
       var breakdownRows = '<div class="breakdown-row"><span class="breakdown-label">Base premium (cover &amp; risk factors)</span><span class="breakdown-value num">' + currency.format(r.core) + '</span></div>';
       if (r.addons.items.length) {
         breakdownRows += r.addons.items.map(function (item) {
-          return '<div class="breakdown-row"><span class="breakdown-label">' + item.label + '</span><span class="breakdown-value num">' +
-            (item.cost > 0 ? '+' + currency.format(item.cost) : 'Included') + '</span></div>';
+          var display = item.cost === null ? 'Not offered by ' + r.insurer.name
+            : (item.cost > 0 ? '+' + currency.format(item.cost) : 'Included');
+          return '<div class="breakdown-row"><span class="breakdown-label">' + item.label + '</span><span class="breakdown-value num">' + display + '</span></div>';
         }).join('');
       } else {
         breakdownRows += '<div class="breakdown-row"><span class="breakdown-label">Add-ons selected</span><span class="breakdown-value">None</span></div>';
