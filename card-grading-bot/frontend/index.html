@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Otter Grading</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%A6%3C/text%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">🦦</span>
+      <span class="brand-name">Otter Grading</span>
+    </div>
+    <div class="brand-companies">
+      <span class="chip chip-psa">PSA</span>
+      <span class="chip chip-bgs">BGS</span>
+      <span class="chip chip-cgc">CGC</span>
+      <span class="chip chip-tag">TAG</span>
+      <span class="chip chip-sgc">SGC</span>
+      <span class="chip chip-hga">HGA</span>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <h1>Know your card's grade before you submit it</h1>
+    <p class="tagline">Upload front &amp; back photos and Otter Grading estimates your card's condition under PSA, Beckett (BGS), CGC, TAG, SGC, and HGA-style grading rules &mdash; instantly.</p>
+  </header>
+
+  <main class="container">
+    <section class="disclaimer">
+      <span class="disclaimer-icon" aria-hidden="true">ⓘ</span>
+      <div>
+        <strong>Unofficial estimator, for reference only.</strong>
+        Otter Grading is not affiliated with, endorsed by, or a substitute for
+        grading from PSA, Beckett Grading Services, CGC Cards, TAG Grading,
+        SGC, or HGA. Results are approximations from photo analysis and public grading
+        guides &mdash; real submissions are graded in hand by professional graders.
+      </div>
+    </section>
+
+    <details class="tips">
+      <summary>📸 Tips for the most accurate results</summary>
+      <ul>
+        <li>Use even, diffused lighting (natural window light or a lightbox) &mdash; avoid direct flash or glare.</li>
+        <li>Shoot straight-on, directly above the card, rather than at an angle.</li>
+        <li>Put the card on a plain, contrasting background so its edges are easy to isolate.</li>
+        <li>Fill the frame with the card, but keep all four edges visible with a small margin.</li>
+        <li>Tap to focus on the card and hold the camera steady before shooting.</li>
+        <li>If you can, remove the card from a sleeve or toploader &mdash; glare and reflections reduce accuracy.</li>
+        <li>Use your camera's highest resolution setting; move physically closer rather than zooming digitally.</li>
+        <li>Take separate, clean photos of the front and back &mdash; not one photo of both.</li>
+      </ul>
+    </details>
+
+    <section class="uploader">
+      <div class="drop-grid">
+        <label class="drop-zone" id="drop-front">
+          <input type="file" id="front-input" accept="image/*" hidden />
+          <img id="front-preview" class="preview" hidden />
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="drop-label">Front of card</span>
+          <span class="drop-hint">Click or drag an image</span>
+        </label>
+        <label class="drop-zone" id="drop-back">
+          <input type="file" id="back-input" accept="image/*" hidden />
+          <img id="back-preview" class="preview" hidden />
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="drop-label">Back of card</span>
+          <span class="drop-hint">Click or drag an image</span>
+        </label>
+      </div>
+      <button id="grade-btn" disabled>
+        <span class="btn-label">Grade My Card</span>
+      </button>
+      <p id="status-msg" class="status-msg" hidden></p>
+    </section>
+
+    <section id="results" class="results" hidden>
+      <h2>Estimated Grades</h2>
+
+      <div id="card-id" class="card-id" hidden></div>
+
+      <div id="quality-warnings" class="quality-warnings" hidden></div>
+
+      <div class="diagnostics">
+        <h3>Why this grade?</h3>
+        <p class="diagnostics-intro">Here's exactly what the vision pipeline measured on your photos.</p>
+        <div class="diagnostic-legend">
+          <span><i class="dot dot-good"></i> Strong (9.5+)</span>
+          <span><i class="dot dot-fair"></i> Minor wear (8.0&ndash;9.5)</span>
+          <span><i class="dot dot-poor"></i> Notable wear (&lt;8.0)</span>
+          <span><i class="dot dot-centering"></i> Centering lines</span>
+          <span><i class="dot dot-blemish"></i> Surface flag</span>
+        </div>
+        <div class="diagnostic-photos">
+          <figure>
+            <img id="annotated-front" class="diagnostic-image" alt="Front of card with grading measurements marked" />
+            <figcaption>Front</figcaption>
+          </figure>
+          <figure>
+            <img id="annotated-back" class="diagnostic-image" alt="Back of card with grading measurements marked" />
+            <figcaption>Back</figcaption>
+          </figure>
+        </div>
+        <ul id="explanation-list" class="explanation-list"></ul>
+      </div>
+
+      <div id="measurements" class="measurements"></div>
+      <div id="result-cards" class="result-cards"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p><span aria-hidden="true">🦦</span> Otter Grading &mdash; an independent, open-source card grading estimator.</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

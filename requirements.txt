@@ -1,0 +1,4 @@
+# Deployment shim only: lets platform auto-detection (e.g. Railway/Nixpacks)
+# find a Python project at the repo root of this monorepo. The real
+# dependencies live in card-grading-bot/backend/requirements.txt.
+-r card-grading-bot/backend/requirements.txt
