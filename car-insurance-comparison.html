@@ -381,6 +381,27 @@
     .factor-item { grid-template-columns: 108px 1fr 48px; }
   }
 
+  .checklist-card { margin-top: 16px; }
+  .checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .checklist li {
+    font-size: 13.5px;
+    color: var(--ink);
+    padding-left: 20px;
+    position: relative;
+  }
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid var(--accent);
+    border-radius: 2px;
+  }
+  .checklist-addons-label { margin: 16px 0 4px; font-size: 12px; font-weight: 600; color: var(--ink-soft); }
+  .checklist-addons { margin: 0; font-size: 13.5px; color: var(--ink); }
+
   .footnote { margin-top: 36px; max-width: 72ch; font-size: 12px; color: var(--ink-faint); border-top: 1px solid var(--line); padding-top: 16px; }
   .footnote p { margin: 0 0 6px; }
 </style>
@@ -558,6 +579,21 @@
         <h3>What's driving your estimate</h3>
         <p class="factors-sub">Deviation from a standard-risk baseline, before insurer-specific pricing</p>
         <ul class="factor-list" id="factor-list"></ul>
+      </div>
+
+      <div class="factors-card checklist-card">
+        <h3>Quote-day checklist</h3>
+        <p class="factors-sub">Have these ready before you click through — same list, every insurer, so the real quotes stay comparable</p>
+        <ul class="checklist">
+          <li>Full name, date of birth, and licence number (plus class and years held)</li>
+          <li>Home address — insurers price by exact address, not just region</li>
+          <li>Vehicle registration plate, or the make, model, year and VIN</li>
+          <li>At-fault claims and no-claims history for the last 5 years, and your current insurer if you're switching</li>
+          <li>Estimated annual mileage and how the car is mainly used (private, commute, business)</li>
+          <li>A phone number and email you're OK with that insurer holding — expect it to be treated as a live enquiry</li>
+        </ul>
+        <p class="checklist-addons-label">Add-ons selected above — ask each insurer for the same ones:</p>
+        <p class="checklist-addons" id="checklist-addons">None selected yet</p>
       </div>
     </section>
   </div>
@@ -764,6 +800,17 @@
     }
   }
 
+  function updateChecklistAddons(inputs) {
+    var el = document.getElementById('checklist-addons');
+    if (!inputs.selectedAddons.length) {
+      el.textContent = 'None selected yet — tick any extras above to add them here.';
+      return;
+    }
+    var labels = ADDONS.filter(function (a) { return inputs.selectedAddons.indexOf(a.key) !== -1; })
+      .map(function (a) { return a.label; });
+    el.textContent = labels.join(', ');
+  }
+
   function addonCostFor(insurer, addon) {
     if (insurer.addonOverrides && Object.prototype.hasOwnProperty.call(insurer.addonOverrides, addon.key)) {
       return insurer.addonOverrides[addon.key];
@@ -829,6 +876,7 @@
     updateNewForOldAvailability(inputs);
     updateDriverNotices(inputs);
     inputs = readInputs();
+    updateChecklistAddons(inputs);
     var f = computeFactors(inputs);
     var combined = combinedOf(f);
     var corePremium = BASE_PREMIUM * combined;
